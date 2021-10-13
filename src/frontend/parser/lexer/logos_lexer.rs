@@ -151,6 +151,9 @@ pub enum LexerToken {
     #[regex(r"%")]
     Percent,
     
+    #[regex(r"..")]
+    DoubleDot,
+    
     #[regex(r"&")]
     Ampersand,
     #[regex(r"&&")]
