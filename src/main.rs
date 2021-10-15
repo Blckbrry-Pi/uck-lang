@@ -1,5 +1,5 @@
 #[cfg(debug_assertions)]
-use uckc::frontend::parser::lexer::{get_custom_lexer_from_string};
+use uckc::frontend::parser::parse_str;
 
 #[cfg(debug_assertions)]
 use std::io::{self, Read};
@@ -12,9 +12,7 @@ fn main() {
         io::stdin().read_to_string(&mut string).unwrap();
     
     
-        for token in get_custom_lexer_from_string(&string) {
-            println!("{:?}", token);
-        }
+        println!("{:#?}", parse_str(&string));
     }
 
     println!("Compiler for uck-lang coming soon!");
