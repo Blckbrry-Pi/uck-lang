@@ -2,12 +2,13 @@ use logos::{Lexer, Logos, Span, Source};
 
 pub struct SavedLexerPosition(usize);
 
+#[derive(Debug)]
 struct TokenWithExtras<TokenType> {
     pub token: TokenType,
     pub span: Span,
 }
 
-pub struct CustomLexerStruct<'a, TokenType: Logos<'a> + Clone> {
+pub struct CustomLexerStruct<'a, TokenType: core::fmt::Debug + Logos<'a> + Clone> {
     orig_lexer: Lexer<'a, TokenType>,
 
     tokens: Vec<TokenWithExtras<TokenType>>,
@@ -15,7 +16,7 @@ pub struct CustomLexerStruct<'a, TokenType: Logos<'a> + Clone> {
     next_token_index: usize,
 }
 
-impl<'a, TokenType: Clone + Logos<'a>> From<Lexer<'a, TokenType>> for CustomLexerStruct<'a, TokenType> {
+impl<'a, TokenType: Clone + core::fmt::Debug + Logos<'a>> From<Lexer<'a, TokenType>> for CustomLexerStruct<'a, TokenType> {
     fn from(lexer: Lexer<'a, TokenType>) -> CustomLexerStruct<'a, TokenType> {
         CustomLexerStruct {
             orig_lexer: lexer,
@@ -25,7 +26,7 @@ impl<'a, TokenType: Clone + Logos<'a>> From<Lexer<'a, TokenType>> for CustomLexe
     }
 }
 
-impl<'a, TokenType: Clone + Logos<'a>> Iterator for CustomLexerStruct<'a, TokenType> {
+impl<'a, TokenType: Clone + core::fmt::Debug + Logos<'a>> Iterator for CustomLexerStruct<'a, TokenType> {
     type Item = TokenType;
 
     fn next(&mut self) -> Option<TokenType> {
@@ -52,8 +53,8 @@ impl<'a, TokenType: Clone + Logos<'a>> Iterator for CustomLexerStruct<'a, TokenT
     }
 }
 
-impl<'a, TokenType: Clone + Logos<'a>> CustomLexerStruct<'a, TokenType> {
-    pub fn span(&mut self) -> Option<Span> {
+impl<'a, TokenType: Clone + core::fmt::Debug + Logos<'a>> CustomLexerStruct<'a, TokenType> {
+    pub fn span(&self) -> Option<Span> {
         if self.tokens.len() > self.next_token_index - 1 {
             Some(self.tokens[self.next_token_index - 1].span.clone())
         } else {
@@ -61,7 +62,7 @@ impl<'a, TokenType: Clone + Logos<'a>> CustomLexerStruct<'a, TokenType> {
         }
     }
 
-    pub fn slice(&mut self) -> Option<&<TokenType::Source as Source>::Slice> {
+    pub fn slice(&self) -> Option<&'a <TokenType::Source as Source>::Slice> {
         if let Some(span) = self.span() {
             self.orig_lexer.source().slice(span)
         } else {
@@ -70,7 +71,7 @@ impl<'a, TokenType: Clone + Logos<'a>> CustomLexerStruct<'a, TokenType> {
     } 
 }
 
-impl<'a, TokenType: Clone + Logos<'a>> CustomLexerStruct<'a, TokenType> {
+impl<'a, TokenType: Clone + core::fmt::Debug + Logos<'a>> CustomLexerStruct<'a, TokenType> {
     pub fn peek(&mut self) -> Option<TokenType> {
         let optional_token = self.next();
 
@@ -92,7 +93,7 @@ impl<'a, TokenType: Clone + Logos<'a>> CustomLexerStruct<'a, TokenType> {
         }
     }
 
-    pub fn peek_slice(&mut self) -> Option<&<TokenType::Source as Source>::Slice> {
+    pub fn peek_slice(&mut self) -> Option<&'a <TokenType::Source as Source>::Slice> {
         if let Some(peeked_span) = self.peek_span() {
             self.orig_lexer.source().slice(peeked_span)
         } else {
@@ -101,12 +102,18 @@ impl<'a, TokenType: Clone + Logos<'a>> CustomLexerStruct<'a, TokenType> {
     }
 }
 
-impl<'a, TokenType: Clone + Logos<'a>> CustomLexerStruct<'a, TokenType> {
+impl<'a, TokenType: Clone + core::fmt::Debug + Logos<'a>> CustomLexerStruct<'a, TokenType> {
     pub fn save_position(&self) -> SavedLexerPosition {
         SavedLexerPosition(self.next_token_index)
     }
 
     pub fn return_to_position(&mut self, position: SavedLexerPosition) {
         self.next_token_index = position.0
+    }
+}
+
+impl<'a, TokenType: Clone + core::fmt::Debug + Logos<'a>> CustomLexerStruct<'a, TokenType> {
+    pub fn source(&self) -> &'a TokenType::Source {
+        self.orig_lexer.source()
     }
 }
