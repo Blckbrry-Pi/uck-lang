@@ -1,6 +1,6 @@
 use logos::Logos;
 #[derive(Clone, Debug, Logos, PartialEq)]
-pub enum LexerToken {
+pub enum LexerToken<'a> {
 
     /*
 
@@ -212,8 +212,8 @@ pub enum LexerToken {
 
     */
 
-    #[regex(r"[\p{L}_][\p{L}\p{N}_]*", |lex| lex.slice().to_string())]
-    Identifier(String),
+    #[regex(r"[\p{L}_][\p{L}\p{N}_]*")]
+    Identifier(&'a str),
 
 
 
