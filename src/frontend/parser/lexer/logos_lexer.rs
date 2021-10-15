@@ -151,7 +151,7 @@ pub enum LexerToken<'a> {
     #[regex(r"%")]
     Percent,
     
-    #[regex(r"..")]
+    #[regex(r"\.\.")]
     DoubleDot,
     
     #[regex(r"&")]
@@ -252,7 +252,7 @@ pub enum LexerToken<'a> {
 
 
     #[regex(r#"//.*"#)]
-    #[regex(r#"/\*([^*]*\*+)+/"#)]
+    #[regex(r#"/\*([^*]*\*+)((([^*/]?)|([^*/][^*]*))\*+)*/"#)]
     Comment,
 
     /*
