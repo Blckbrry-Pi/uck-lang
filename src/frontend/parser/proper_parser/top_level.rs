@@ -54,11 +54,12 @@ pub fn parse_top_level<'a: 'b, 'b>(
         Some(LexerToken::Type) => parse_type_alias(lxr),
         Some(LexerToken::Comment) => {
             let span = lxr.span().unwrap();
+            let slice = lxr.slice().unwrap();
             parse_top_level(lxr)
                 .map(
                     |top_level_statement| TopLevelAstNode::CommentedNode(
                         span.start..top_level_statement.get_span().end,
-                        span,
+                        slice,
                         Box::new(top_level_statement),
                     )
                 )

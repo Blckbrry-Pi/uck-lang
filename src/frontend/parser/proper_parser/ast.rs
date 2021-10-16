@@ -13,7 +13,7 @@ pub enum TopLevelAstNode<'a> {
     StructDec(Span, String, StructDecAstNode),
 
 
-    CommentedNode(Span, Span, Box<TopLevelAstNode<'a>>),
+    CommentedNode(Span, &'a str, Box<TopLevelAstNode<'a>>),
 
     Empty,
 }
