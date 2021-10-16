@@ -1,13 +1,13 @@
-use super::super::lexer::{ custom_lexer_struct::CustomLexerStruct, logos_lexer::LexerToken };
 
+
+use super::super::lexer::logos_lexer::LexerToken;
+
+use super::utility_things::{ flush_comments, LexerStruct, TopLevelAstResult };
 use super::patterns::parse_destructuring_pattern;
 
 use super::ast::{ TopLevelAstNode, AstModuleLocation };
 use super::parse_error::ParseError;
 
-type LexerStruct<'a> = CustomLexerStruct<'a, LexerToken<'a>>;
-
-type TopLevelAstResult<'a> = Result<TopLevelAstNode<'a>, ParseError<'a>>;
 
 pub fn parse_top_level<'a: 'b, 'b>(
     lxr: &'b mut LexerStruct<'a>,
@@ -24,6 +24,9 @@ pub fn parse_top_level<'a: 'b, 'b>(
         Some(LexerToken::Import) => parse_import_statement(lxr),
         Some(LexerToken::Export) => {
             let start = lxr.span().unwrap().start;
+
+            flush_comments(lxr);
+
             if let Some(LexerToken::Default) = lxr.peek() {
                 lxr.next();
                 parse_import_statement(lxr)
@@ -33,9 +36,7 @@ pub fn parse_top_level<'a: 'b, 'b>(
                             Box::new(top_level_statement),
                         )
                     )
-                    .map_err(
-                        |mut error| { error.fatal = true; error } 
-                    )
+                    .map_err(|mut error| { error.fatal = true; error })
             } else {
                 parse_import_statement(lxr)
                     .map(
@@ -44,9 +45,7 @@ pub fn parse_top_level<'a: 'b, 'b>(
                             Box::new(top_level_statement),
                         )
                     )
-                    .map_err(
-                        |mut error| { error.fatal = true; error }
-                    )
+                    .map_err(|mut error| { error.fatal = true; error })
             }
         },
         Some(LexerToken::Enum) => parse_enum_dec(lxr),
@@ -87,11 +86,17 @@ pub fn parse_top_level<'a: 'b, 'b>(
 pub fn parse_import_statement<'a: 'b, 'b>(
     lxr: &'b mut LexerStruct<'a>,
 ) -> TopLevelAstResult<'a> {
+    flush_comments(lxr);
+    
     match parse_destructuring_pattern(lxr) {
-        Ok(destructuring_pattern) => {
+        Ok(destructuring_pattern) => {        
+            flush_comments(lxr);
+            
             let module_path = if let Some(LexerToken::From) = lxr.next() {
                 let mut module_path: AstModuleLocation;
             
+                flush_comments(lxr);
+
                 if let Some(LexerToken::Identifier(name)) = lxr.next() {
                     module_path = AstModuleLocation::Root(lxr.span().unwrap(), name);
                 } else {
@@ -109,7 +114,11 @@ pub fn parse_import_statement<'a: 'b, 'b>(
                 }
 
                 loop {
+                    flush_comments(lxr);
+
                     if let Some(LexerToken::MemberAccess) = lxr.peek() { lxr.next(); } else { break; }
+
+                    flush_comments(lxr);
 
                     if let Some(LexerToken::Identifier(next_ident)) = lxr.next() {
                         let new_span = module_path.get_span().start..lxr.span().unwrap().end;

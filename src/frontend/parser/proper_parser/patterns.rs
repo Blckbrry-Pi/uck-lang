@@ -1,17 +1,10 @@
-use super::super::lexer::{ custom_lexer_struct::CustomLexerStruct, logos_lexer::LexerToken };
+use super::super::lexer::logos_lexer::LexerToken;
 
 use super::ast::{ AstDestructuringPattern };
 use super::parse_error::ParseError;
-
-type LexerStruct<'a> = CustomLexerStruct<'a, LexerToken<'a>>;
+use super::utility_things::{ LexerStruct, flush_comments };
 
 type AstDestructuringPatternResult<'a> = Result<AstDestructuringPattern<'a>, ParseError<'a>>;
-
-fn flush_comments<'a>(
-    lxr: &mut LexerStruct<'a>,
-) {
-    while let Some(LexerToken::Comment) = lxr.peek() { lxr.next(); }
-}
 
 pub fn parse_destructuring_pattern<'a: 'b, 'b>(
     lxr: &'b mut LexerStruct<'a>,

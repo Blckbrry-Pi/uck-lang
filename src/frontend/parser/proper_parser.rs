@@ -5,6 +5,8 @@ pub mod top_level;
 
 pub mod parse_error;
 
+pub mod utility_things;
+
 use ast::TopLevelAstNode;
 use super::lexer::{ custom_lexer_struct::CustomLexerStruct, logos_lexer::LexerToken };
 use parse_error::ParseError;
