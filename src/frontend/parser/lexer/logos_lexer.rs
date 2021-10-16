@@ -1,15 +1,12 @@
 use logos::Logos;
 #[derive(Clone, Debug, Logos, PartialEq)]
 pub enum LexerToken<'a> {
-
     /*
 
         KEYWORDS SECTION
 
     */
-
     // Module keywords
-
     #[regex(r"import")]
     Import,
     #[regex(r"from")]
@@ -20,9 +17,7 @@ pub enum LexerToken<'a> {
     #[regex(r"export")]
     Export,
 
-
     // Type stuff
-
     #[regex(r"enum")]
     Enum,
     #[regex(r"struct")]
@@ -38,17 +33,13 @@ pub enum LexerToken<'a> {
     #[regex(r"as")]
     As,
 
-
     // Class/Struct constraints.
-    
     #[regex(r"extends")]
     Extends,
     #[regex(r"implements")]
     Implements,
 
-
     // Conditional Branching
-
     #[regex(r"if")]
     If,
     #[regex(r"else")]
@@ -57,9 +48,7 @@ pub enum LexerToken<'a> {
     #[regex(r"match")]
     Match,
 
-
     // Loops
-
     #[regex(r"for")]
     For,
     #[regex(r"while")]
@@ -72,9 +61,7 @@ pub enum LexerToken<'a> {
     #[regex(r"continue")]
     Continue,
 
-
     // Variables
-
     #[regex(r"let")]
     Let,
     #[regex(r"const")]
@@ -83,22 +70,17 @@ pub enum LexerToken<'a> {
     #[regex(r"mut")]
     Mutable,
 
-
     // Evaluation
-
     #[regex(r"return")]
     Return,
     #[regex(r"yield")]
     Yield,
-
-
 
     /*
 
         PUNCTUATION
 
     */
-
     #[regex(r",")]
     Comma,
 
@@ -127,16 +109,12 @@ pub enum LexerToken<'a> {
     #[regex(r">")]
     RightAngleBracketOrGreaterThan,
 
-
-
     /*
 
         SYMBOLS SECTION
 
     */
-
     // Operators
-
     #[regex(r"\*\*")]
     DoubleAsterisk,
     #[regex(r"\*")]
@@ -150,10 +128,10 @@ pub enum LexerToken<'a> {
 
     #[regex(r"%")]
     Percent,
-    
+
     #[regex(r"\.\.")]
     DoubleDot,
-    
+
     #[regex(r"&")]
     Ampersand,
     #[regex(r"&&")]
@@ -176,7 +154,7 @@ pub enum LexerToken<'a> {
     EqualTo,
     #[regex(r"!=")]
     NotEqualTo,
-    
+
     #[regex(r">=")]
     GreaterThanOrEqualTo,
     #[regex(r"<=")]
@@ -196,35 +174,26 @@ pub enum LexerToken<'a> {
     #[regex(r"(~)|(\$)|(@)|(#)")]
     Reserved,
 
-
     // Arrows
-
     #[regex(r"->")]
     ThinArrow,
     #[regex(r"=>")]
     ThiccArrow,
-    
-
 
     /*
-    
+
         IDENTIFIERS SECTION (with literally just identifiers)
 
     */
-
     #[regex(r"[\p{L}_][\p{L}\p{N}_]*")]
     Identifier(&'a str),
-
-
 
     /*
 
         LITERALS SECTION
 
     */
-
     // String literals
-
     #[regex(r#""([^\\"]|(\\[\S\s]))*""#, |lex| lex.slice().parse())]
     #[regex(r#"l"[^"]*""#, |lex| lex.slice().parse())]
     StriLiteral(String),
@@ -232,9 +201,7 @@ pub enum LexerToken<'a> {
     #[regex(r#"l'[^']'"#, |lex| lex.slice().chars().next().unwrap())]
     CharLiteral(char),
 
-
     // Number literals
-
     #[regex(r#"[0-9]+"#, |lex| lex.slice().parse())]
     InteLiteral(i64),
     #[regex(r#"[0-9]+u"#, |lex| lex.slice().trim_end_matches('u').parse())]
@@ -244,12 +211,9 @@ pub enum LexerToken<'a> {
     #[regex(r"[0-9]+(\.[0-9]*([eE][+-]?[0-9]+)?|[eE][+-]?[0-9]+)", |lex| lex.slice().parse())]
     FloatLiteral(f64),
 
-
     // Boolean literals
-
     #[regex(r#"true|false"#, |lex| "true" == lex.slice())]
     BoolLiteral(bool),
-
 
     #[regex(r#"//.*"#)]
     #[regex(r#"/\*([^*]*\*+)((([^*/]?)|([^*/][^*]*))\*+)*/"#)]
@@ -258,9 +222,8 @@ pub enum LexerToken<'a> {
     /*
 
         ERROR SECTION
-    
-    */
 
+    */
     #[error]
     #[regex(r"[ \t\n\f]+", logos::skip)]
     Error,

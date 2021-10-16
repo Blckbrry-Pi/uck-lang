@@ -8,10 +8,9 @@ fn main() {
     #[cfg(debug_assertions)]
     {
         let mut string = String::new();
-    
+
         io::stdin().read_to_string(&mut string).unwrap();
-    
-    
+
         println!("{:#?}", parse_str(&string));
     }
 

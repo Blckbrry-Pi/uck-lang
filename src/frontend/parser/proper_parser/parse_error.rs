@@ -1,6 +1,5 @@
 #[derive(Debug)]
 pub struct ParseError<'a> {
-
     pub expected: &'a [&'a str],
     pub span: Option<logos::Span>,
 
@@ -11,10 +10,7 @@ pub struct ParseError<'a> {
 }
 
 impl<'a> ParseError<'a> {
-    pub fn end_of_file_error(
-        expected: &'a [&'a str],
-        is_fatal: bool,
-    ) -> Self {
+    pub fn end_of_file_error(expected: &'a [&'a str], is_fatal: bool) -> Self {
         ParseError {
             expected,
             span: Some(usize::MAX..usize::MAX),

@@ -1,6 +1,6 @@
-use std::collections::HashMap;
-use std::borrow::Cow;
 use logos::Span;
+use std::borrow::Cow;
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub enum TopLevelAstNode<'a> {
@@ -24,15 +24,15 @@ pub enum TopLevelAstNode<'a> {
 impl<'comment_contents> TopLevelAstNode<'comment_contents> {
     pub fn get_span(&self) -> Span {
         match self {
-            Self::ClassDec(span, _, _) |
-            Self::CommentedNode(span, _, _) |
-            Self::EnumDec(span, _, _) |
-            Self::Export(span, _) |
-            Self::ExportDefault(span, _) |
-            Self::ImportFrom(span, _, _) |
-            Self::StructDec(span, _, _) |
-            Self::TypeAlias(span, _, _) => span.clone(),
-            Self::Empty => unimplemented!("Can't get the span of an empty AST node.")
+            Self::ClassDec(span, _, _)
+            | Self::CommentedNode(span, _, _)
+            | Self::EnumDec(span, _, _)
+            | Self::Export(span, _)
+            | Self::ExportDefault(span, _)
+            | Self::ImportFrom(span, _, _)
+            | Self::StructDec(span, _, _)
+            | Self::TypeAlias(span, _, _) => span.clone(),
+            Self::Empty => unimplemented!("Can't get the span of an empty AST node."),
         }
     }
 }
@@ -70,9 +70,9 @@ pub enum AstType<'a> {
 impl<'a> AstType<'a> {
     pub fn get_span(&self) -> Span {
         match self {
-            Self::RootName(span, _) |
-            Self::MemberOf(span, _, _) |
-            Self::GenericOf(span, _, _) => span.clone(),
+            Self::RootName(span, _) | Self::MemberOf(span, _, _) | Self::GenericOf(span, _, _) => {
+                span.clone()
+            }
         }
     }
 }
@@ -86,8 +86,7 @@ pub enum AstModuleLocation<'a> {
 impl<'a> AstModuleLocation<'a> {
     pub fn get_span(&self) -> Span {
         match self {
-            Self::Root(span, _) |
-            Self::MemberOf(span, _, _) => span.clone(),
+            Self::Root(span, _) | Self::MemberOf(span, _, _) => span.clone(),
         }
     }
 }
@@ -96,19 +95,18 @@ impl<'a> AstModuleLocation<'a> {
 pub enum AstDestructuringPattern<'a> {
     Name(Span, &'a str),
     AliasedName(Span, &'a str, &'a str),
-    Destructured(Span, &'a str, Box<Vec<AstDestructuringPattern<'a>>>),
+    Destructured(Span, &'a str, Vec<AstDestructuringPattern<'a>>),
 }
 
 impl<'a> AstDestructuringPattern<'a> {
     pub fn get_span(&self) -> Span {
         match self {
-            Self::Name(span, _) |
-            Self::AliasedName(span, _, _) |
-            Self::Destructured(span, _, _) => span.clone(),
+            Self::Name(span, _)
+            | Self::AliasedName(span, _, _)
+            | Self::Destructured(span, _, _) => span.clone(),
         }
     }
 }
 
 #[derive(Debug)]
-pub enum AstPattern {
-}
+pub enum AstPattern {}

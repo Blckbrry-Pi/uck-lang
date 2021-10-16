@@ -1,4 +1,4 @@
-use logos::{Lexer, Logos, Span, Source};
+use logos::{Lexer, Logos, Source, Span};
 
 pub struct SavedLexerPosition(usize);
 
@@ -16,7 +16,9 @@ pub struct CustomLexerStruct<'a, TokenType: core::fmt::Debug + Logos<'a> + Clone
     next_token_index: usize,
 }
 
-impl<'a, TokenType: Clone + core::fmt::Debug + Logos<'a>> From<Lexer<'a, TokenType>> for CustomLexerStruct<'a, TokenType> {
+impl<'a, TokenType: Clone + core::fmt::Debug + Logos<'a>> From<Lexer<'a, TokenType>>
+    for CustomLexerStruct<'a, TokenType>
+{
     fn from(lexer: Lexer<'a, TokenType>) -> CustomLexerStruct<'a, TokenType> {
         CustomLexerStruct {
             orig_lexer: lexer,
@@ -26,7 +28,9 @@ impl<'a, TokenType: Clone + core::fmt::Debug + Logos<'a>> From<Lexer<'a, TokenTy
     }
 }
 
-impl<'a, TokenType: Clone + core::fmt::Debug + Logos<'a>> Iterator for CustomLexerStruct<'a, TokenType> {
+impl<'a, TokenType: Clone + core::fmt::Debug + Logos<'a>> Iterator
+    for CustomLexerStruct<'a, TokenType>
+{
     type Item = TokenType;
 
     fn next(&mut self) -> Option<TokenType> {
@@ -36,18 +40,16 @@ impl<'a, TokenType: Clone + core::fmt::Debug + Logos<'a>> Iterator for CustomLex
             Some(token)
         } else {
             let optional_token = self.orig_lexer.next();
-            
+
             if let Some(token) = &optional_token {
-                self.tokens.push(
-                    TokenWithExtras {
-                        token: token.clone(),
-                        span: self.orig_lexer.span(),
-                    }
-                );
+                self.tokens.push(TokenWithExtras {
+                    token: token.clone(),
+                    span: self.orig_lexer.span(),
+                });
             }
 
             self.next_token_index += 1;
-            
+
             optional_token
         }
     }
@@ -68,7 +70,7 @@ impl<'a, TokenType: Clone + core::fmt::Debug + Logos<'a>> CustomLexerStruct<'a, 
         } else {
             None
         }
-    } 
+    }
 }
 
 impl<'a, TokenType: Clone + core::fmt::Debug + Logos<'a>> CustomLexerStruct<'a, TokenType> {
