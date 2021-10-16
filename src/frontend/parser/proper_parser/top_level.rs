@@ -4,6 +4,7 @@ use super::super::lexer::logos_lexer::LexerToken;
 
 use super::utility_things::{ flush_comments, LexerStruct, TopLevelAstResult };
 use super::patterns::parse_destructuring_pattern;
+use super::types::parse_type_alias;
 
 use super::ast::{ TopLevelAstNode, AstModuleLocation };
 use super::parse_error::ParseError;
@@ -205,12 +206,6 @@ pub fn parse_struct_dec<'a: 'b, 'b>(
 }
 
 pub fn parse_class_dec<'a: 'b, 'b>(
-    lxr: &'b mut LexerStruct,
-) -> TopLevelAstResult<'a> {
-    Ok(TopLevelAstNode::Empty)
-}
-
-pub fn parse_type_alias<'a: 'b, 'b>(
     lxr: &'b mut LexerStruct,
 ) -> TopLevelAstResult<'a> {
     Ok(TopLevelAstNode::Empty)
