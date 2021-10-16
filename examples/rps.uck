@@ -1,7 +1,7 @@
-import { println, eprintln, input } from std.io;
+import io: { println, eprintln, input } from std.io;
 
-import { Option: { self, Some, None } } from std.enums;
-import i32 from std.numbers;
+import enums: { Option: { self, Some, None } } from std.enums;
+import numbers: { i32 } from std.numbers;
 
 #[derive(Eq, SelectRandom)]
 enum Hand {
@@ -9,7 +9,7 @@ enum Hand {
     Papr,
     Scis,
 
-    public toString(this) -> String {
+    public fun toString(this) -> String {
         return match this {
             Rock => "Rock",
             Papr => "Paper",
@@ -23,7 +23,7 @@ const WINNING_MATCHUPS = [(Hand.Rock, Hand.Scis), (Hand.Scis, Hand.Papr), (Hand.
 
 const STRINGS_TO_HANDS = [("rock", Hand.Rock), ("paper", Hand.Papr), ("scissors", Hand.Scis)];
 
-fun main(String[] args) -> i32 {
+fun main(args -> String[]) -> i32 {
     match args[0] {
         Some(arg) => {
             const numTimes = i32.parse(arg);
@@ -58,7 +58,7 @@ enum RoundResult {
     Draw,
 }
 
-fun calcRound(computerHand: Hand, playerHand: Hand) -> RoundResult {
+fun calcRound(computerHand -> Hand, playerHand -> Hand) -> RoundResult {
     if computerHand == playerHand {
         return RoundResult.Draw;
     } else if wins(computerHand, playerHand) {
@@ -69,7 +69,7 @@ fun calcRound(computerHand: Hand, playerHand: Hand) -> RoundResult {
 }
 
 
-fun wins(matchup: (Hand, Hand)) -> bool {
+fun wins(matchup -> (Hand, Hand)) -> bool {
     for winningMatchup in WINNING_MATCHUPS.toIter() {
         if winningMatchup == matchup {
             return true;
@@ -79,7 +79,7 @@ fun wins(matchup: (Hand, Hand)) -> bool {
 }
 
 
-fun stringToHand(stringIn: String) -> Option<Hand> {
+fun stringToHand(stringIn -> String) -> Option<Hand> {
     for possibHand in STRINGS_TO_HANDS.toIter() {
         if possibHand.0 == stringIn {
             return Some(possibHand.1);
