@@ -23,48 +23,13 @@ pub fn parse_top_level<'a: 'b, 'b>(
 
     match lxr.next() {
         Some(LexerToken::Import) => parse_import_statement(lxr),
-        Some(LexerToken::Export) => {
-            let start = lxr.span().unwrap().start;
-
-            flush_comments(lxr);
-
-            if let Some(LexerToken::Default) = lxr.peek() {
-                lxr.next();
-                parse_import_statement(lxr)
-                    .map(
-                        |top_level_statement| TopLevelAstNode::ExportDefault(
-                            start..top_level_statement.get_span().end,
-                            Box::new(top_level_statement),
-                        )
-                    )
-                    .map_err(|mut error| { error.fatal = true; error })
-            } else {
-                parse_import_statement(lxr)
-                    .map(
-                        |top_level_statement| TopLevelAstNode::Export(
-                            start..top_level_statement.get_span().end,
-                            Box::new(top_level_statement),
-                        )
-                    )
-                    .map_err(|mut error| { error.fatal = true; error })
-            }
-        },
-        Some(LexerToken::Enum) => parse_enum_dec(lxr),
-        Some(LexerToken::Struct) => parse_struct_dec(lxr),
-        Some(LexerToken::Class) => parse_class_dec(lxr),
+        Some(LexerToken::Export) => parse_export_statement(lxr),
+        Some(LexerToken::Enum) => { unimplemented!("Parsing of enum declarations is not yet supported"); parse_enum_dec(lxr) },
+        Some(LexerToken::Struct) => { unimplemented!("Parsing of struct declarations is not yet supported"); parse_struct_dec(lxr) },
+        Some(LexerToken::Class) => { unimplemented!("Parsing of class declarations is not yet supported"); parse_class_dec(lxr) },
         Some(LexerToken::Type) => parse_type_alias(lxr),
-        Some(LexerToken::Comment) => {
-            let span = lxr.span().unwrap();
-            let slice = lxr.slice().unwrap();
-            parse_top_level(lxr)
-                .map(
-                    |top_level_statement| TopLevelAstNode::CommentedNode(
-                        span.start..top_level_statement.get_span().end,
-                        slice,
-                        Box::new(top_level_statement),
-                    )
-                )
-        }
+        Some(LexerToken::Comment) => parse_documentation_comment(lxr),
+        Some(LexerToken::Semicolon) => parse_top_level(lxr),
         Some(_) => {
             let span = lxr.span().unwrap();
             Err(
@@ -83,6 +48,21 @@ pub fn parse_top_level<'a: 'b, 'b>(
             )
         ),
     }
+}
+
+pub fn parse_documentation_comment<'a: 'b, 'b>(
+    lxr: &'b mut LexerStruct<'a>,
+) -> TopLevelAstResult<'a> {
+    let span = lxr.span().unwrap();
+    let slice = lxr.slice().unwrap();
+    parse_top_level(lxr)
+        .map(
+            |top_level_statement| TopLevelAstNode::CommentedNode(
+                span.start..top_level_statement.get_span().end,
+                slice,
+                Box::new(top_level_statement),
+            )
+        )
 }
 
 pub fn parse_import_statement<'a: 'b, 'b>(
@@ -193,20 +173,49 @@ pub fn parse_import_statement<'a: 'b, 'b>(
     }
 }
 
+pub fn parse_export_statement<'a: 'b, 'b>(
+    lxr: &'b mut LexerStruct<'a>,
+) -> TopLevelAstResult<'a> {
+    let start = lxr.span().unwrap().start;
+
+    flush_comments(lxr);
+
+    if let Some(LexerToken::Default) = lxr.peek() {
+        lxr.next();
+        parse_top_level(lxr)
+            .map(
+                |top_level_statement| TopLevelAstNode::ExportDefault(
+                    start..top_level_statement.get_span().end,
+                    Box::new(top_level_statement),
+                )
+            )
+            .map_err(|mut error| { error.fatal = true; error })
+    } else {
+        parse_top_level(lxr)
+            .map(
+                |top_level_statement| TopLevelAstNode::Export(
+                    start..top_level_statement.get_span().end,
+                    Box::new(top_level_statement),
+                )
+            )
+            .map_err(|mut error| { error.fatal = true; error })
+    }
+}
+
 pub fn parse_enum_dec<'a: 'b, 'b>(
-    lxr: &'b mut LexerStruct,
+    lxr: &'b mut LexerStruct<'a>,
 ) -> TopLevelAstResult<'a> {
     Ok(TopLevelAstNode::Empty)
 }
 
 pub fn parse_struct_dec<'a: 'b, 'b>(
-    lxr: &'b mut LexerStruct,
+    lxr: &'b mut LexerStruct<'a>,
 ) -> TopLevelAstResult<'a> {
     Ok(TopLevelAstNode::Empty)
 }
 
 pub fn parse_class_dec<'a: 'b, 'b>(
-    lxr: &'b mut LexerStruct,
+    lxr: &'b mut LexerStruct<'a>,
 ) -> TopLevelAstResult<'a> {
     Ok(TopLevelAstNode::Empty)
 }
