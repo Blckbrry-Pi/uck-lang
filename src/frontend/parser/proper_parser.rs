@@ -1,6 +1,7 @@
 pub mod ast;
 
 pub mod patterns;
+pub mod types;
 pub mod top_level;
 
 pub mod parse_error;
