@@ -70,6 +70,11 @@ pub enum LexerToken<'a> {
     #[regex(r"mut")]
     Mutable,
 
+    #[regex("pub")]
+    Public,
+    #[regex("priv")]
+    Private,
+
     // Evaluation
     #[regex(r"return")]
     Return,
