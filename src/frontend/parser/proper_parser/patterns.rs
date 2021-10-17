@@ -1,6 +1,6 @@
 use super::super::lexer::logos_lexer::LexerToken;
 
-use super::ast::AstDestructuringPattern;
+use super::ast::patterns::AstDestructuringPattern;
 use super::parse_error::ParseError;
 use super::utility_things::{flush_comments, LexerStruct};
 

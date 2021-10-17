@@ -1,9 +1,9 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
 
-use super::ast::{AstType, Generics, TopLevelAstNode};
+use super::ast::types::{AstType, Generics, TypeAliasAstNode};
 use super::parse_error::ParseError;
-use super::utility_things::{flush_comments, LexerStruct, TopLevelAstResult};
+use super::utility_things::{flush_comments, LexerStruct};
 
 use super::super::lexer::logos_lexer::LexerToken;
 
@@ -253,7 +253,9 @@ pub fn parse_name_and_generics<'a: 'b, 'b>(
     ))
 }
 
-pub fn parse_type_alias<'a: 'b, 'b>(lxr: &'b mut LexerStruct<'a>) -> TopLevelAstResult<'a> {
+pub fn parse_type_alias<'a: 'b, 'b>(
+    lxr: &'b mut LexerStruct<'a>,
+) -> Result<TypeAliasAstNode<'a>, ParseError<'a>> {
     let start_idx = lxr.span().unwrap_or(usize::MAX..usize::MAX).start;
 
     let aliased_type = parse_name_and_generics(lxr)?;
@@ -270,7 +272,7 @@ pub fn parse_type_alias<'a: 'b, 'b>(lxr: &'b mut LexerStruct<'a>) -> TopLevelAst
         });
     }
 
-    let unaliased_type = parse_type(lxr, None).map_err(|mut err| {
+    let orig_type = parse_type(lxr, None).map_err(|mut err| {
         err.fatal = true;
         err
     })?;
@@ -286,9 +288,9 @@ pub fn parse_type_alias<'a: 'b, 'b>(lxr: &'b mut LexerStruct<'a>) -> TopLevelAst
         });
     }
 
-    Ok(TopLevelAstNode::TypeAlias(
-        start_idx..lxr.span().unwrap().end,
+    Ok(TypeAliasAstNode {
+        span: start_idx..lxr.span().unwrap().end,
         aliased_type,
-        unaliased_type,
-    ))
+        orig_type,
+    })
 }

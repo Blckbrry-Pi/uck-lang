@@ -1,6 +1,7 @@
 use super::super::lexer::{custom_lexer_struct::CustomLexerStruct, logos_lexer::LexerToken};
 
-use super::{ast::TopLevelAstNode, parse_error::ParseError};
+use super::ast::top_level::TopLevelAstNode;
+use super::parse_error::ParseError;
 
 pub type TopLevelAstResult<'a> = Result<TopLevelAstNode<'a>, ParseError<'a>>;
 

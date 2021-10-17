@@ -1,5 +1,6 @@
 pub mod ast;
 
+pub mod imports_exports;
 pub mod patterns;
 pub mod top_level;
 pub mod types;
@@ -8,12 +9,10 @@ pub mod parse_error;
 
 pub mod utility_things;
 
-use super::lexer::{custom_lexer_struct::CustomLexerStruct, logos_lexer::LexerToken};
-use ast::TopLevelAstNode;
-use parse_error::ParseError;
+use utility_things::{LexerStruct, TopLevelAstResult};
 
 pub fn get_ast_from_custom_lexer<'a: 'b, 'b>(
-    lxr: &'b mut CustomLexerStruct<'a, LexerToken<'a>>,
-) -> Result<TopLevelAstNode<'a>, ParseError<'a>> {
+    lxr: &'b mut LexerStruct<'a>,
+) -> TopLevelAstResult<'a> {
     top_level::parse_top_level(lxr)
 }
