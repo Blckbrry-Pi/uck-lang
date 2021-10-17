@@ -80,6 +80,7 @@ pub mod enums {
     pub struct EnumDecAstNode<'a> {
         pub span: Span,
         pub enum_type: AstType<'a>,
+        pub implements: Option<AstType<'a>>,
         pub cases: CaseList<'a>,
         pub methods: MethodList<'a>,
     }
