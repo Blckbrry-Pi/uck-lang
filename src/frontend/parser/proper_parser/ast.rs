@@ -73,14 +73,13 @@ pub mod imports_exports {
 pub mod enums {
     use logos::Span;
 
-    use super::types::{AstType, Generics};
+    use super::types::AstType;
     use super::methods::MethodList;
 
     #[derive(Debug)]
     pub struct EnumDecAstNode<'a> {
         pub span: Span,
-        pub name: &'a str,
-        pub generics: Generics<'a>,
+        pub enum_type: AstType<'a>,
         pub cases: CaseList<'a>,
         pub methods: MethodList<'a>,
     }
