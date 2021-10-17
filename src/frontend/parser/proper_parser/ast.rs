@@ -72,16 +72,26 @@ pub mod imports_exports {
 
 pub mod enums {
     use logos::Span;
-    use std::collections::HashMap;
 
     use super::types::{AstType, Generics};
+    use super::methods::MethodList;
 
     #[derive(Debug)]
     pub struct EnumDecAstNode<'a> {
         pub span: Span,
         pub name: &'a str,
         pub generics: Generics<'a>,
-        pub values: HashMap<String, (Span, Vec<AstType<'a>>)>,
+        pub cases: CaseList<'a>,
+        pub methods: MethodList<'a>,
+    }
+
+    pub type CaseList<'a> = Vec<EnumCaseAstNode<'a>>;
+
+    #[derive(Debug)]
+    pub struct EnumCaseAstNode<'a> {
+        pub span: Span,
+        pub case_name: &'a str,
+        pub case_args: Vec<AstType<'a>>,
     }
 }
 
@@ -171,4 +181,56 @@ pub mod patterns {
 
     #[derive(Debug)]
     pub enum AstPattern {}
+}
+
+pub mod methods {
+    use logos::Span;
+
+    use super::types::{AstType, Generics};
+    use super::publicity::AstPublicity;
+    use super::expressions::ExpressionBlockAstNode;
+
+
+    #[derive(Debug)]
+    pub enum MethodOrConstraintAstNode<'a> {
+        Method(Span, MethodAstNode<'a>),
+        Constraint(Span, Generics<'a>, MethodList<'a>),
+    }
+
+
+    #[derive(Debug)]
+    pub enum AstMethodArgument<'a> {
+        This(Span),
+        ThisMut(Span),
+        Regular(Span, &'a str, AstType<'a>)
+    }
+
+
+    #[derive(Debug)]
+    pub struct MethodAstNode<'a> {
+        pub span: Span,
+        pub publicity: AstPublicity,
+        pub new_type: AstType<'a>,
+        pub args: Vec<AstMethodArgument<'a>>,
+        pub body: ExpressionBlockAstNode,
+    }
+
+    pub type MethodList<'a> = Vec<MethodOrConstraintAstNode<'a>>;
+}
+
+pub mod publicity {
+    #[derive(Debug)]
+    pub enum AstPublicity {
+        Public,
+        Private,
+        Unknown,
+    }
+}
+
+
+pub mod expressions {
+    #[derive(Debug)]
+    pub struct ExpressionBlockAstNode {
+
+    }
 }
