@@ -193,8 +193,17 @@ pub mod methods {
 
     #[derive(Debug)]
     pub enum MethodOrConstraintAstNode<'a> {
-        Method(Span, MethodAstNode<'a>),
+        Method(Span, PossiblyDocumentedMethodAstNode<'a>),
         Constraint(Span, Generics<'a>, MethodList<'a>),
+    }
+
+    impl<'a> MethodOrConstraintAstNode<'a> {
+        pub fn get_span(&self) -> Span {
+            match self {
+                Self::Method(span, _)
+                | Self::Constraint(span, _, _) => span.clone(),
+            }
+        }
     }
 
 
@@ -205,6 +214,30 @@ pub mod methods {
         Regular(Span, &'a str, AstType<'a>)
     }
 
+    impl<'a> AstMethodArgument<'a> {
+        pub fn get_span(&self) -> Span {
+            match self {
+                Self::This(span)
+                | Self::ThisMut(span)
+                | Self::Regular(span, _, _) => span.clone(),
+            }
+        }
+    }
+
+    #[derive(Debug)]
+    pub enum PossiblyDocumentedMethodAstNode<'a> {
+        BaseMethod(Span, MethodAstNode<'a>),
+        DocumentedMethod(Span, &'a str, Box<PossiblyDocumentedMethodAstNode<'a>>),
+    }
+
+    impl<'a> PossiblyDocumentedMethodAstNode<'a> {
+        pub fn get_span(&self) -> Span {
+            match self {
+                Self::BaseMethod(span, _)
+                | Self::DocumentedMethod(span, _, _) => span.clone()
+            }
+        }
+    }
 
     #[derive(Debug)]
     pub struct MethodAstNode<'a> {
