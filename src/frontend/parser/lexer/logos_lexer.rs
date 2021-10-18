@@ -75,6 +75,11 @@ pub enum LexerToken<'a> {
     #[regex("priv")]
     Private,
 
+    #[regex(r"this")]
+    LittleThis,
+    #[regex(r"This")]
+    BigThis,
+
     // Evaluation
     #[regex(r"return")]
     Return,
