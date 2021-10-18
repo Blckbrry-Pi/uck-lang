@@ -245,6 +245,7 @@ pub mod methods {
         pub publicity: AstPublicity,
         pub new_type: AstType<'a>,
         pub args: Vec<AstMethodArgument<'a>>,
+        pub return_type: Option<AstType<'a>>,
         pub body: ExpressionBlockAstNode,
     }
 
