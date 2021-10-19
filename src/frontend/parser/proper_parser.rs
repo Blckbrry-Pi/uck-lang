@@ -1,6 +1,9 @@
 pub mod ast;
 
+pub mod enums;
+pub mod expressions;
 pub mod imports_exports;
+pub mod methods;
 pub mod patterns;
 pub mod top_level;
 pub mod types;

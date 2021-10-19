@@ -1,3 +1,5 @@
+use crate::frontend::parser::proper_parser::enums::parse_enum_dec;
+
 use super::super::lexer::logos_lexer::LexerToken;
 
 use super::imports_exports::{parse_export_statement, parse_import_statement};
@@ -46,8 +48,7 @@ pub fn parse_top_level<'a: 'b, 'b>(lxr: &'b mut LexerStruct<'a>) -> TopLevelAstR
         // To deal with parsing enum declarations. Wraps enum declaration struct in the TopLevelAstNode enum.
         #[allow(unreachable_code, unused_variables, clippy::diverging_sub_expression)]
         Some(LexerToken::Enum) => {
-            let enum_declaration_struct: super::ast::enums::EnumDecAstNode =
-                unimplemented!("Parsing of enum declarations is not yet supported");
+            let enum_declaration_struct: super::ast::enums::EnumDecAstNode = parse_enum_dec(lxr)?;
             Ok(TopLevelAstNode::EnumDec(
                 enum_declaration_struct.span.clone(),
                 enum_declaration_struct,

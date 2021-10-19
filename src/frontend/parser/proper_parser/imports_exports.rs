@@ -3,7 +3,9 @@ use super::super::lexer::logos_lexer::LexerToken;
 use super::patterns::parse_destructuring_pattern;
 use super::top_level::parse_top_level;
 
-use super::utility_things::{flush_comments, LexerStruct, TopLevelAstResult};
+use super::utility_things::{
+    expect_semicolon, expect_token, flush_comments, LexerStruct, TopLevelAstResult,
+};
 
 use super::ast::imports_exports::{AstModuleLocation, ImportStatementAstNode};
 use super::ast::top_level::TopLevelAstNode;
@@ -18,27 +20,20 @@ pub fn parse_import_statement<'a: 'b, 'b>(
         Ok(destructuring_pattern) => {
             flush_comments(lxr);
 
-            let module_location = if let Some(LexerToken::From) = lxr.next() {
+            expect_token(lxr, LexerToken::From, &["`from`"])?;
+
+            let module_location = {
                 let mut module_path: AstModuleLocation;
 
                 flush_comments(lxr);
 
-                if let Some(LexerToken::Identifier(name)) = lxr.next() {
-                    module_path = AstModuleLocation::Root(lxr.span().unwrap(), name);
-                } else {
-                    const EXPECTED_ARR: &[&str] = &["identifier (as part of module path)"];
+                expect_token(
+                    lxr,
+                    LexerToken::Identifier(""),
+                    &["identifier (as part of module path)"],
+                )?;
 
-                    return Err(if let Some(span) = lxr.span() {
-                        ParseError::unexpected_token_error(
-                            lxr.slice().unwrap(),
-                            span,
-                            EXPECTED_ARR,
-                            true,
-                        )
-                    } else {
-                        ParseError::end_of_file_error(EXPECTED_ARR, true)
-                    });
-                }
+                module_path = AstModuleLocation::Root(lxr.span().unwrap(), lxr.slice().unwrap());
 
                 loop {
                     flush_comments(lxr);
@@ -51,61 +46,30 @@ pub fn parse_import_statement<'a: 'b, 'b>(
 
                     flush_comments(lxr);
 
-                    if let Some(LexerToken::Identifier(next_ident)) = lxr.next() {
-                        let new_span = module_path.get_span().start..lxr.span().unwrap().end;
+                    expect_token(
+                        lxr,
+                        LexerToken::Identifier(""),
+                        &["identifier (as part of module path)"],
+                    )?;
+                    let new_span = module_path.get_span().start..lxr.span().unwrap().end;
 
-                        module_path =
-                            AstModuleLocation::MemberOf(new_span, Box::new(module_path), next_ident)
-                    } else {
-                        const EXPECTED_ARR: &[&str] = &["identifier (as part of module path)"];
-
-                        return Err(if let Some(span) = lxr.span() {
-                            ParseError::unexpected_token_error(
-                                lxr.slice().unwrap(),
-                                span,
-                                EXPECTED_ARR,
-                                true,
-                            )
-                        } else {
-                            ParseError::end_of_file_error(EXPECTED_ARR, true)
-                        });
-                    }
+                    module_path = AstModuleLocation::MemberOf(
+                        new_span,
+                        Box::new(module_path),
+                        lxr.slice().unwrap(),
+                    );
                 }
 
                 module_path
-            } else {
-                const EXPECTED_ARR: &[&str] = &["`from`"];
-                return if let Some(span) = lxr.span() {
-                    Err(ParseError::unexpected_token_error(
-                        lxr.slice().unwrap(),
-                        span,
-                        EXPECTED_ARR,
-                        true,
-                    ))
-                } else {
-                    Err(ParseError::end_of_file_error(EXPECTED_ARR, true))
-                };
             };
-            let saved_span = lxr.span().unwrap();
-            if let Some(LexerToken::Semicolon) = lxr.next() {
-                Ok(ImportStatementAstNode {
-                    span: destructuring_pattern.get_span().start..lxr.span().unwrap().end,
-                    destructuring_pattern,
-                    module_location,
-                })
-            } else {
-                const EXPECTED_ARR: &[&str] = &["`;`"];
-                if let Some(slice) = lxr.slice() {
-                    Err(ParseError::unexpected_token_error(
-                        slice,
-                        saved_span,
-                        EXPECTED_ARR,
-                        true,
-                    ))
-                } else {
-                    Err(ParseError::end_of_file_error(EXPECTED_ARR, true))
-                }
-            }
+
+            expect_semicolon(lxr)?;
+
+            Ok(ImportStatementAstNode {
+                span: destructuring_pattern.get_span().start..lxr.span().unwrap().end,
+                destructuring_pattern,
+                module_location,
+            })
         }
         Err(mut parse_err) => {
             parse_err.fatal = true;

@@ -73,8 +73,8 @@ pub mod imports_exports {
 pub mod enums {
     use logos::Span;
 
-    use super::types::AstType;
     use super::methods::MethodList;
+    use super::types::AstType;
 
     #[derive(Debug)]
     pub struct EnumDecAstNode<'a> {
@@ -186,10 +186,9 @@ pub mod patterns {
 pub mod methods {
     use logos::Span;
 
-    use super::types::{AstType, Generics};
-    use super::publicity::AstPublicity;
     use super::expressions::ExpressionBlockAstNode;
-
+    use super::publicity::AstPublicity;
+    use super::types::{AstType, Generics};
 
     #[derive(Debug)]
     pub enum MethodOrConstraintAstNode<'a> {
@@ -200,26 +199,22 @@ pub mod methods {
     impl<'a> MethodOrConstraintAstNode<'a> {
         pub fn get_span(&self) -> Span {
             match self {
-                Self::Method(span, _)
-                | Self::Constraint(span, _, _) => span.clone(),
+                Self::Method(span, _) | Self::Constraint(span, _, _) => span.clone(),
             }
         }
     }
-
 
     #[derive(Debug)]
     pub enum AstMethodArgument<'a> {
         This(Span),
         ThisMut(Span),
-        Regular(Span, &'a str, AstType<'a>)
+        Regular(Span, &'a str, AstType<'a>),
     }
 
     impl<'a> AstMethodArgument<'a> {
         pub fn get_span(&self) -> Span {
             match self {
-                Self::This(span)
-                | Self::ThisMut(span)
-                | Self::Regular(span, _, _) => span.clone(),
+                Self::This(span) | Self::ThisMut(span) | Self::Regular(span, _, _) => span.clone(),
             }
         }
     }
@@ -233,8 +228,7 @@ pub mod methods {
     impl<'a> PossiblyDocumentedMethodAstNode<'a> {
         pub fn get_span(&self) -> Span {
             match self {
-                Self::BaseMethod(span, _)
-                | Self::DocumentedMethod(span, _, _) => span.clone()
+                Self::BaseMethod(span, _) | Self::DocumentedMethod(span, _, _) => span.clone(),
             }
         }
     }
@@ -261,10 +255,7 @@ pub mod publicity {
     }
 }
 
-
 pub mod expressions {
     #[derive(Debug)]
-    pub struct ExpressionBlockAstNode {
-
-    }
+    pub struct ExpressionBlockAstNode {}
 }

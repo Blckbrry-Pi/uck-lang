@@ -3,7 +3,9 @@ use std::collections::HashMap;
 
 use super::ast::types::{AstType, Generics, TypeAliasAstNode};
 use super::parse_error::ParseError;
-use super::utility_things::{flush_comments, LexerStruct};
+use super::utility_things::{
+    call_error, expect_semicolon, expect_token, flush_comments, LexerStruct,
+};
 
 use super::super::lexer::logos_lexer::LexerToken;
 
@@ -15,26 +17,23 @@ pub fn parse_generics<'a: 'b, 'b>(
 
     let mut generics = HashMap::new();
     loop {
-        const EXPECTED_ARR: &[&str] = &[
-            "`>` (to close the generics)",
-            "identifier (to create a new generic)",
-        ];
-
         flush_comments(lxr);
 
         let generic_name: Cow<'a, str> = if allow_constraints {
             match lxr.next() {
                 Some(LexerToken::RightAngleBracketOrGreaterThan) => break,
                 Some(LexerToken::Identifier(name)) => name,
-                Some(_) => {
-                    return Err(ParseError::unexpected_token_error(
-                        lxr.slice().unwrap(),
-                        lxr.span().unwrap(),
-                        EXPECTED_ARR,
+                invalid_value => {
+                    return Err(call_error(
+                        lxr,
+                        invalid_value,
+                        &[
+                            "`>` (to close the generics)",
+                            "identifier (to create a new generic)",
+                        ],
                         true,
                     ))
                 }
-                None => return Err(ParseError::end_of_file_error(EXPECTED_ARR, true)),
             }
             .into()
         } else {
@@ -45,12 +44,6 @@ pub fn parse_generics<'a: 'b, 'b>(
         let slice = lxr.slice().unwrap();
 
         const EXPECTED_ARR_2: &[&str] = &["a unique generic name"];
-
-        const EXPECTED_ARR_3: &[&str] = &[
-            "`>` (to close the generics)",
-            "`,` (to signal the next generic)",
-            "`:` (to define a constraint on the current generic)",
-        ];
 
         flush_comments(lxr);
 
@@ -84,16 +77,19 @@ pub fn parse_generics<'a: 'b, 'b>(
                     }
                     break;
                 }
-                Some(LexerToken::Colon) => (),
-                Some(_) => {
-                    return Err(ParseError::unexpected_token_error(
-                        lxr.slice().unwrap(),
-                        lxr.span().unwrap(),
-                        EXPECTED_ARR_3,
+                Some(LexerToken::ThinArrow) => (),
+                invalid_value => {
+                    return Err(call_error(
+                        lxr,
+                        invalid_value,
+                        &[
+                            "`>` (to close the generics)",
+                            "`,` (to signal the next generic)",
+                            "`:` (to define a constraint on the current generic)",
+                        ],
                         true,
                     ))
                 }
-                None => return Err(ParseError::end_of_file_error(EXPECTED_ARR_3, true)),
             }
         }
 
@@ -125,25 +121,22 @@ pub fn parse_generics<'a: 'b, 'b>(
             ));
         }
 
-        const EXPECTED_ARR_4: &[&str] = &[
-            "`>` (to close the generics)",
-            "`,` (to signal the next generic)",
-        ];
-
         flush_comments(lxr);
 
         match lxr.next() {
             Some(LexerToken::Comma) => (),
             Some(LexerToken::RightAngleBracketOrGreaterThan) => break,
-            Some(_) => {
-                return Err(ParseError::unexpected_token_error(
-                    lxr.slice().unwrap(),
-                    lxr.span().unwrap(),
-                    EXPECTED_ARR_4,
+            invalid_value => {
+                return Err(call_error(
+                    lxr,
+                    invalid_value,
+                    &[
+                        "`>` (to close the generics)",
+                        "`,` (to signal the next generic)",
+                    ],
                     true,
                 ))
             }
-            None => return Err(ParseError::end_of_file_error(EXPECTED_ARR_4, true)),
         }
     }
 
@@ -154,67 +147,64 @@ pub fn parse_type<'a: 'b, 'b>(
     lxr: &'b mut LexerStruct<'a>,
     curr_type: Option<AstType<'a>>,
 ) -> Result<AstType<'a>, ParseError<'a>> {
-    if let Some(LexerToken::Identifier(name)) = lxr.next() {
-        let mut curr_type = match curr_type {
-            Some(starting_type) => AstType::MemberOf(
-                starting_type.get_span().start..lxr.span().unwrap().end,
-                Box::new(starting_type),
-                name,
-            ),
-            None => AstType::RootName(lxr.span().unwrap(), name),
-        };
+    expect_token(
+        lxr,
+        LexerToken::Identifier(""),
+        &["identifier (as part of a type)"],
+    )?;
+    let name = lxr.slice().unwrap();
 
-        match lxr.peek() {
-            Some(LexerToken::MemberAccess) => {
-                lxr.next();
-                match parse_type(lxr, Some(curr_type)) {
-                    Ok(parsed_type) => curr_type = parsed_type,
-                    Err(error) => return Err(error),
-                }
+    let mut curr_type = match curr_type {
+        Some(starting_type) => AstType::MemberOf(
+            starting_type.get_span().start..lxr.span().unwrap().end,
+            Box::new(starting_type),
+            name,
+        ),
+        None => AstType::RootName(lxr.span().unwrap(), name),
+    };
+
+    match lxr.peek() {
+        Some(LexerToken::MemberAccess) => {
+            lxr.next();
+            match parse_type(lxr, Some(curr_type)) {
+                Ok(parsed_type) => curr_type = parsed_type,
+                Err(error) => return Err(error),
             }
-            Some(LexerToken::LeftAngleBracketOrLessThan) => {
-                lxr.next();
-                match parse_generics(lxr, false) {
-                    Ok(parsed_generic) => {
-                        curr_type = AstType::GenericOf(
-                            curr_type.get_span().start..parsed_generic.0.end,
-                            Box::new(curr_type),
-                            parsed_generic,
-                        )
-                    }
-                    Err(error) => return Err(error),
-                }
-                match lxr.peek() {
-                    Some(LexerToken::MemberAccess) => {
-                        lxr.next();
-                        match parse_type(lxr, Some(curr_type)) {
-                            Ok(parsed_type) => curr_type = parsed_type,
-                            Err(error) => return Err(error),
-                        }
-                    }
-                    Some(LexerToken::LeftAngleBracketOrLessThan) => {
-                        return Err(ParseError::unexpected_token_error(
-                            lxr.slice().unwrap(),
-                            lxr.span().unwrap(),
-                            &["`.` (to continue type)", "end of type"],
-                            true,
-                        ))
-                    }
-                    _ => (),
-                }
-            }
-            _ => (),
         }
-        Ok(curr_type)
-    } else {
-        const EXPECTED_ARR: &[&str] = &["identifier (as part of a type)"];
-
-        Err(if let Some(slice) = lxr.slice() {
-            ParseError::unexpected_token_error(slice, lxr.span().unwrap(), EXPECTED_ARR, false)
-        } else {
-            ParseError::end_of_file_error(EXPECTED_ARR, false)
-        })
+        Some(LexerToken::LeftAngleBracketOrLessThan) => {
+            lxr.next();
+            match parse_generics(lxr, false) {
+                Ok(parsed_generic) => {
+                    curr_type = AstType::GenericOf(
+                        curr_type.get_span().start..parsed_generic.0.end,
+                        Box::new(curr_type),
+                        parsed_generic,
+                    )
+                }
+                Err(error) => return Err(error),
+            }
+            match lxr.peek() {
+                Some(LexerToken::MemberAccess) => {
+                    lxr.next();
+                    match parse_type(lxr, Some(curr_type)) {
+                        Ok(parsed_type) => curr_type = parsed_type,
+                        Err(error) => return Err(error),
+                    }
+                }
+                Some(LexerToken::LeftAngleBracketOrLessThan) => {
+                    return Err(ParseError::unexpected_token_error(
+                        lxr.slice().unwrap(),
+                        lxr.span().unwrap(),
+                        &["`.` (to continue type)", "end of type"],
+                        true,
+                    ))
+                }
+                _ => (),
+            }
+        }
+        _ => (),
     }
+    Ok(curr_type)
 }
 
 pub fn parse_name_and_generics<'a: 'b, 'b>(
@@ -222,17 +212,13 @@ pub fn parse_name_and_generics<'a: 'b, 'b>(
 ) -> Result<AstType<'a>, ParseError<'a>> {
     flush_comments(lxr);
 
-    let name = if let Some(LexerToken::Identifier(name)) = lxr.next() {
-        name
-    } else {
-        const EXPECTED_ARR: &[&str] = &["identifier (as part of a type)"];
+    expect_token(
+        lxr,
+        LexerToken::Identifier(""),
+        &["identifier (as part of a type)"],
+    )?;
+    let name = lxr.slice().unwrap();
 
-        return Err(if let Some(slice) = lxr.slice() {
-            ParseError::unexpected_token_error(slice, lxr.span().unwrap(), EXPECTED_ARR, true)
-        } else {
-            ParseError::end_of_file_error(EXPECTED_ARR, true)
-        });
-    };
     let base_span = lxr.span().unwrap();
     let base_name = AstType::RootName(base_span, name);
 
@@ -260,33 +246,18 @@ pub fn parse_type_alias<'a: 'b, 'b>(
 
     let aliased_type = parse_name_and_generics(lxr)?;
 
-    if let Some(LexerToken::Assign) = lxr.next() {
-    } else {
-        const EXPECTED_ARR: &[&str] =
-            &["`=` (to seperate the type alias and the type it refers to)"];
-
-        return Err(if let Some(slice) = lxr.slice() {
-            ParseError::unexpected_token_error(slice, lxr.span().unwrap(), EXPECTED_ARR, true)
-        } else {
-            ParseError::end_of_file_error(EXPECTED_ARR, true)
-        });
-    }
+    expect_token(
+        lxr,
+        LexerToken::Assign,
+        &["`=` (to seperate the type alias and the type it refers to)"],
+    )?;
 
     let orig_type = parse_type(lxr, None).map_err(|mut err| {
         err.fatal = true;
         err
     })?;
 
-    if let Some(LexerToken::Semicolon) = lxr.next() {
-    } else {
-        const EXPECTED_ARR: &[&str] = &["`;` (to signal the end of the expression)"];
-
-        return Err(if let Some(slice) = lxr.slice() {
-            ParseError::unexpected_token_error(slice, lxr.span().unwrap(), EXPECTED_ARR, true)
-        } else {
-            ParseError::end_of_file_error(EXPECTED_ARR, true)
-        });
-    }
+    expect_semicolon(lxr)?;
 
     Ok(TypeAliasAstNode {
         span: start_idx..lxr.span().unwrap().end,
