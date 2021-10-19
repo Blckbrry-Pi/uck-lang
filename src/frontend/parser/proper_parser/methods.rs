@@ -27,7 +27,7 @@ pub fn parse_methods_until_none_are_found<'a>(
             }
         }
 
-        if let Some(LexerToken::Colon) = lxr.peek() {
+        if let Some(LexerToken::Comma) = lxr.peek() {
             lxr.next();
         }
     };
@@ -171,11 +171,26 @@ pub fn parse_method_args<'a>(
     let mut args = Vec::new();
 
     loop {
-        let arg_name = match lxr.next() {
-            Some(LexerToken::Identifier(arg_name)) => arg_name,
+        match lxr.next() {
+            Some(LexerToken::Identifier(arg_name)) => {
+                let start_idx = lxr.span().unwrap().start;
+
+                expect_token(
+                    lxr,
+                    LexerToken::ThinArrow,
+                    &["`->` (to supply the type of the argument)"],
+                )?;
+
+                let arg_type = parse_type(lxr, None)?;
+
+                args.push(AstMethodArgument::Regular(
+                    start_idx..lxr.span().unwrap().end,
+                    arg_name,
+                    arg_type,
+                ));
+            },
             Some(LexerToken::LittleThis) => {
                 args.push(AstMethodArgument::This(lxr.span().unwrap()));
-                continue;
             },
             Some(LexerToken::Mutable) => {
                 let start_idx = lxr.span().unwrap().start;
@@ -183,7 +198,6 @@ pub fn parse_method_args<'a>(
                 expect_token(lxr, LexerToken::LittleThis, &["`this`"])?;
 
                 args.push(AstMethodArgument::ThisMut(start_idx..lxr.span().unwrap().end));
-                continue;
             }
             Some(LexerToken::RightParenthesis) => break,
             invalid_value => return Err(call_error(
@@ -198,21 +212,19 @@ pub fn parse_method_args<'a>(
             )),
         };
 
-        expect_token(
-            lxr,
-            LexerToken::ThinArrow,
-            &["`->` (to supply the type of the argument)"],
-        )?;
-
-        let start_idx = lxr.span().unwrap().start;
-
-        let arg_type = parse_type(lxr, None)?;
-
-        args.push(AstMethodArgument::Regular(
-            start_idx..lxr.span().unwrap().end,
-            arg_name,
-            arg_type,
-        ))
+        match lxr.next() {
+            Some(LexerToken::Comma) => (),
+            Some(LexerToken::RightParenthesis) => break,
+            invalid_token => return Err(call_error(
+                lxr,
+                invalid_token,
+                &[
+                    "`,` (to signal the next argument)",
+                    "`)` (to end the argument declarations)"
+                ],
+                true,
+            )),
+        }
     }
 
     Ok(args)
