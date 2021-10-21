@@ -70,11 +70,21 @@ pub enum LexerToken<'a> {
     #[regex(r"mut")]
     Mutable,
 
+    // Publicity
     #[regex("pub")]
     Public,
+
+    #[regex("mpriv")]
+    ModulePrivate,
     #[regex("priv")]
     Private,
 
+    #[regex("mprot")]
+    ModuleProtected,
+    #[regex("prot")]
+    Protected,
+
+    // Self-referential
     #[regex(r"this")]
     LittleThis,
     #[regex(r"This")]

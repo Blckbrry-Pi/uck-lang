@@ -80,9 +80,7 @@ pub fn parse_enum_case<'a>(
     })
 }
 
-pub fn parse_enum_dec<'a: 'b, 'b>(
-    lxr: &'b mut LexerStruct<'a>,
-) -> Result<EnumDecAstNode<'a>, ParseError<'a>> {
+pub fn parse_enum_dec<'a>(lxr: &mut LexerStruct<'a>) -> Result<EnumDecAstNode<'a>, ParseError<'a>> {
     let start_idx = lxr.span().unwrap().start;
 
     flush_comments(lxr);

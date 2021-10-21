@@ -9,8 +9,8 @@ use super::utility_things::{
 
 use super::super::lexer::logos_lexer::LexerToken;
 
-pub fn parse_generics<'a: 'b, 'b>(
-    lxr: &'b mut LexerStruct<'a>,
+pub fn parse_generics<'a>(
+    lxr: &mut LexerStruct<'a>,
     allow_constraints: bool,
 ) -> Result<Generics<'a>, ParseError<'a>> {
     let starting_span = lxr.span().unwrap();
@@ -143,8 +143,8 @@ pub fn parse_generics<'a: 'b, 'b>(
     Ok((starting_span.start..lxr.span().unwrap().end, generics))
 }
 
-pub fn parse_type<'a: 'b, 'b>(
-    lxr: &'b mut LexerStruct<'a>,
+pub fn parse_type<'a>(
+    lxr: &mut LexerStruct<'a>,
     curr_type: Option<AstType<'a>>,
 ) -> Result<AstType<'a>, ParseError<'a>> {
     expect_token(
@@ -207,8 +207,8 @@ pub fn parse_type<'a: 'b, 'b>(
     Ok(curr_type)
 }
 
-pub fn parse_name_and_generics<'a: 'b, 'b>(
-    lxr: &'b mut LexerStruct<'a>,
+pub fn parse_name_and_generics<'a>(
+    lxr: &mut LexerStruct<'a>,
 ) -> Result<AstType<'a>, ParseError<'a>> {
     flush_comments(lxr);
 
@@ -239,8 +239,8 @@ pub fn parse_name_and_generics<'a: 'b, 'b>(
     ))
 }
 
-pub fn parse_type_alias<'a: 'b, 'b>(
-    lxr: &'b mut LexerStruct<'a>,
+pub fn parse_type_alias<'a>(
+    lxr: &mut LexerStruct<'a>,
 ) -> Result<TypeAliasAstNode<'a>, ParseError<'a>> {
     let start_idx = lxr.span().unwrap_or(usize::MAX..usize::MAX).start;
 

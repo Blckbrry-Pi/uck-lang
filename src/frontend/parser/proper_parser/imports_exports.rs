@@ -11,8 +11,8 @@ use super::ast::imports_exports::{AstModuleLocation, ImportStatementAstNode};
 use super::ast::top_level::TopLevelAstNode;
 use super::parse_error::ParseError;
 
-pub fn parse_import_statement<'a: 'b, 'b>(
-    lxr: &'b mut LexerStruct<'a>,
+pub fn parse_import_statement<'a>(
+    lxr: &mut LexerStruct<'a>,
 ) -> Result<ImportStatementAstNode<'a>, ParseError<'a>> {
     flush_comments(lxr);
 
@@ -78,7 +78,7 @@ pub fn parse_import_statement<'a: 'b, 'b>(
     }
 }
 
-pub fn parse_export_statement<'a: 'b, 'b>(lxr: &'b mut LexerStruct<'a>) -> TopLevelAstResult<'a> {
+pub fn parse_export_statement<'a>(lxr: &mut LexerStruct<'a>) -> TopLevelAstResult<'a> {
     let start = lxr.span().unwrap().start;
 
     flush_comments(lxr);

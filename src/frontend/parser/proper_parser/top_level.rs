@@ -9,7 +9,7 @@ use super::utility_things::{LexerStruct, TopLevelAstResult};
 use super::ast::top_level::TopLevelAstNode;
 use super::parse_error::ParseError;
 
-pub fn parse_top_level<'a: 'b, 'b>(lxr: &'b mut LexerStruct<'a>) -> TopLevelAstResult<'a> {
+pub fn parse_top_level<'a>(lxr: &mut LexerStruct<'a>) -> TopLevelAstResult<'a> {
     const EXPECTED_ARR: &[&str] = &[
         "Import statement",
         "Enum Declaration",
@@ -90,8 +90,8 @@ pub fn parse_top_level<'a: 'b, 'b>(lxr: &'b mut LexerStruct<'a>) -> TopLevelAstR
     }
 }
 
-pub fn parse_top_level_documentation_comment<'a: 'b, 'b>(
-    lxr: &'b mut LexerStruct<'a>,
+pub fn parse_top_level_documentation_comment<'a>(
+    lxr: &mut LexerStruct<'a>,
 ) -> TopLevelAstResult<'a> {
     let span = lxr.span().unwrap();
     let slice = lxr.slice().unwrap();

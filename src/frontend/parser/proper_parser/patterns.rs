@@ -6,8 +6,8 @@ use super::utility_things::{call_error, expect_token, flush_comments, LexerStruc
 
 type AstDestructuringPatternResult<'a> = Result<AstDestructuringPattern<'a>, ParseError<'a>>;
 
-pub fn parse_destructuring_pattern<'a: 'b, 'b>(
-    lxr: &'b mut LexerStruct<'a>,
+pub fn parse_destructuring_pattern<'a>(
+    lxr: &mut LexerStruct<'a>,
 ) -> AstDestructuringPatternResult<'a> {
     flush_comments(lxr);
 

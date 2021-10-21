@@ -1,20 +1,18 @@
-use crate::frontend::parser::lexer::logos_lexer::LexerToken;
-use crate::frontend::parser::proper_parser::types::{parse_generics, parse_type};
-use crate::frontend::parser::proper_parser::utility_things::expect_token;
+use super::super::lexer::logos_lexer::LexerToken;
 
 use super::ast::methods::{
     AstMethodArgument, MethodAstNode, MethodList, MethodOrConstraintAstNode,
     PossiblyDocumentedMethodAstNode,
 };
-use super::ast::publicity::AstPublicity;
 use super::expressions::parse_block_expr;
 use super::parse_error::ParseError;
-use super::types::parse_name_and_generics;
-use super::utility_things::{call_error, flush_comments, LexerStruct};
+use super::publicity::ParsePublicity;
+use super::types::{parse_generics, parse_name_and_generics, parse_type};
+use super::utility_things::{call_error, expect_token, flush_comments, LexerStruct};
 
-pub fn parse_methods_until_none_are_found<'a>(
+pub fn parse_methods_until_none_are_found<'a, PublicityEnum: ParsePublicity>(
     lxr: &mut LexerStruct<'a>,
-) -> Result<(MethodList<'a>, ParseError<'a>), ParseError<'a>> {
+) -> Result<(MethodList<'a, PublicityEnum>, ParseError<'a>), ParseError<'a>> {
     let mut methods = Vec::new();
     let first_error = loop {
         let curr_spot = lxr.save_position();
@@ -35,101 +33,93 @@ pub fn parse_methods_until_none_are_found<'a>(
     Ok((methods, first_error))
 }
 
-pub fn parse_possibly_documented_method_or_constraint_block<'a>(
+pub fn parse_possibly_documented_method_or_constraint_block<'a, PublicityEnum: ParsePublicity>(
     lxr: &mut LexerStruct<'a>,
-) -> Result<MethodOrConstraintAstNode<'a>, ParseError<'a>> {
-    match lxr.peek() {
-        Some(LexerToken::Comment) => {
-            lxr.next();
-            let comment_start_idx = lxr.span().unwrap().start;
-            let comment_contents = lxr.slice().unwrap();
+) -> Result<MethodOrConstraintAstNode<'a, PublicityEnum>, ParseError<'a>> {
+    match PublicityEnum::parse_publicity(lxr) {
+        Ok(publicity) => {
+            lxr.next().unwrap();
+            let method = parse_method(lxr, publicity)?;
+            Ok(MethodOrConstraintAstNode::Method(
+                method.span.clone(),
+                PossiblyDocumentedMethodAstNode::BaseMethod(method.span.clone(), method),
+            ))
+        }
+        Err(_) => match lxr.peek() {
+            Some(LexerToken::Comment) => {
+                lxr.next();
+                let comment_start_idx = lxr.span().unwrap().start;
+                let comment_contents = lxr.slice().unwrap();
 
-            match parse_possibly_documented_method_or_constraint_block(lxr) {
-                Ok(MethodOrConstraintAstNode::Method(span, method)) => {
-                    Ok(MethodOrConstraintAstNode::Method(
-                        comment_start_idx..span.end,
-                        PossiblyDocumentedMethodAstNode::DocumentedMethod(
+                match parse_possibly_documented_method_or_constraint_block(lxr) {
+                    Ok(MethodOrConstraintAstNode::Method(span, method)) => {
+                        Ok(MethodOrConstraintAstNode::Method(
                             comment_start_idx..span.end,
-                            comment_contents,
-                            Box::new(method),
-                        ),
-                    ))
+                            PossiblyDocumentedMethodAstNode::DocumentedMethod(
+                                comment_start_idx..span.end,
+                                comment_contents,
+                                Box::new(method),
+                            ),
+                        ))
+                    }
+                    Ok(MethodOrConstraintAstNode::Constraint(span, generics, method_list)) => Ok(
+                        MethodOrConstraintAstNode::Constraint(span, generics, method_list),
+                    ),
+                    Err(err) => Err(err),
                 }
-                Ok(MethodOrConstraintAstNode::Constraint(span, generics, method_list)) => Ok(
-                    MethodOrConstraintAstNode::Constraint(span, generics, method_list),
-                ),
-                Err(err) => Err(err),
-            }
-        }
-
-        Some(LexerToken::Public) => {
-            lxr.next().unwrap();
-            let method = parse_method(lxr, AstPublicity::Public)?;
-            Ok(MethodOrConstraintAstNode::Method(
-                method.span.clone(),
-                PossiblyDocumentedMethodAstNode::BaseMethod(method.span.clone(), method),
-            ))
-        }
-
-        Some(LexerToken::Private) => {
-            lxr.next().unwrap();
-            let method = parse_method(lxr, AstPublicity::Private)?;
-            Ok(MethodOrConstraintAstNode::Method(
-                method.span.clone(),
-                PossiblyDocumentedMethodAstNode::BaseMethod(method.span.clone(), method),
-            ))
-        }
-
-        Some(LexerToken::LeftAngleBracketOrLessThan) => {
-            lxr.next();
-
-            let start_idx = lxr.span().unwrap().start;
-
-            let constraint_generics = parse_generics(lxr, true)?;
-
-            expect_token(
-                lxr,
-                LexerToken::LeftCurlyBrace,
-                &["`{` (to start the constraint block)"],
-            )?;
-
-            let constrained_methods_result = parse_methods_until_none_are_found(lxr)?;
-
-            if expect_token(
-                lxr,
-                LexerToken::RightCurlyBrace,
-                &["`}` (to end the constraint block)"],
-            )
-            .is_err()
-            {
-                return Err(constrained_methods_result.1);
             }
 
-            let constrained_methods = constrained_methods_result.0;
+            Some(LexerToken::LeftAngleBracketOrLessThan) => {
+                lxr.next();
 
-            Ok(MethodOrConstraintAstNode::Constraint(
-                start_idx..lxr.span().unwrap().end,
-                constraint_generics,
-                constrained_methods,
-            ))
-        }
+                let start_idx = lxr.span().unwrap().start;
 
-        invalid_value => Err(call_error(
-            lxr,
-            invalid_value,
-            &[
-                "`pub` or `priv` (to create a method with the specified visibility)",
-                "`<` (to create a new constraint block)",
-            ],
-            false,
-        )),
+                let constraint_generics = parse_generics(lxr, true)?;
+
+                expect_token(
+                    lxr,
+                    LexerToken::LeftCurlyBrace,
+                    &["`{` (to start the constraint block)"],
+                )?;
+
+                let constrained_methods_result = parse_methods_until_none_are_found(lxr)?;
+
+                if expect_token(
+                    lxr,
+                    LexerToken::RightCurlyBrace,
+                    &["`}` (to end the constraint block)"],
+                )
+                .is_err()
+                {
+                    return Err(constrained_methods_result.1);
+                }
+
+                let constrained_methods = constrained_methods_result.0;
+
+                Ok(MethodOrConstraintAstNode::Constraint(
+                    start_idx..lxr.span().unwrap().end,
+                    constraint_generics,
+                    constrained_methods,
+                ))
+            }
+
+            invalid_value => Err(call_error(
+                lxr,
+                invalid_value,
+                &[
+                    "privacy specifier (to create a method with the specified visibility)",
+                    "`<` (to create a new constraint block)",
+                ],
+                false,
+            )),
+        },
     }
 }
 
-pub fn parse_method<'a>(
+pub fn parse_method<'a, PublicityEnum>(
     lxr: &mut LexerStruct<'a>,
-    publicity: AstPublicity,
-) -> Result<MethodAstNode<'a>, ParseError<'a>> {
+    publicity: PublicityEnum,
+) -> Result<MethodAstNode<'a, PublicityEnum>, ParseError<'a>> {
     let start_idx = lxr.span().unwrap().start;
 
     expect_token(lxr, LexerToken::Function, &["`fun`"])?;
@@ -215,15 +205,17 @@ pub fn parse_method_args<'a>(
         match lxr.next() {
             Some(LexerToken::Comma) => (),
             Some(LexerToken::RightParenthesis) => break,
-            invalid_token => return Err(call_error(
-                lxr,
-                invalid_token,
-                &[
-                    "`,` (to signal the next argument)",
-                    "`)` (to end the argument declarations)"
-                ],
-                true,
-            )),
+            invalid_token => {
+                return Err(call_error(
+                    lxr,
+                    invalid_token,
+                    &[
+                        "`,` (to signal the next argument)",
+                        "`)` (to end the argument declarations)",
+                    ],
+                    true,
+                ))
+            }
         }
     }
 
