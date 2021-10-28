@@ -1,8 +1,8 @@
-use crate::frontend::parser::proper_parser::enums::parse_enum_dec;
-
 use super::super::lexer::logos_lexer::LexerToken;
 
+use super::enums::parse_enum_dec;
 use super::imports_exports::{parse_export_statement, parse_import_statement};
+use super::structs::parse_struct;
 use super::types::parse_type_alias;
 use super::utility_things::{LexerStruct, TopLevelAstResult};
 
@@ -59,7 +59,7 @@ pub fn parse_top_level<'a>(lxr: &mut LexerStruct<'a>) -> TopLevelAstResult<'a> {
         #[allow(unreachable_code, unused_variables, clippy::diverging_sub_expression)]
         Some(LexerToken::Struct) => {
             let struct_declaration_struct: super::ast::structs::StructDecAstNode =
-                unimplemented!("Parsing of struct declarations is not yet supported");
+                parse_struct(lxr)?;
             Ok(TopLevelAstNode::StructDec(
                 struct_declaration_struct.span.clone(),
                 struct_declaration_struct,

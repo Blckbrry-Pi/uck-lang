@@ -2,10 +2,13 @@ pub mod ast;
 
 pub mod enums;
 pub mod expressions;
+pub mod extends_implements;
+pub mod fields;
 pub mod imports_exports;
 pub mod methods;
 pub mod patterns;
 pub mod publicity;
+pub mod structs;
 pub mod top_level;
 pub mod types;
 

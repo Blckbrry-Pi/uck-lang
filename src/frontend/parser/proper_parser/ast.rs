@@ -109,7 +109,7 @@ pub mod structs {
         pub span: Span,
         pub struct_type: AstType<'a>,
         pub implements: Option<AstType<'a>>,
-        pub fields: FieldList<'a>,
+        pub fields: FieldList<'a, AstPublicity>,
         pub methods: MethodList<'a, AstPublicity>,
     }
 }
@@ -128,26 +128,24 @@ pub mod classes {
         pub class_type: AstType<'a>,
         pub extends: Option<AstType<'a>>,
         pub implements: Option<AstType<'a>>,
-        pub fields: FieldList<'a>,
+        pub fields: FieldList<'a, AstClassItemPublicity>,
         pub methods: MethodList<'a, AstClassItemPublicity>,
     }
 }
 
 pub mod fields {
+    use super::types::AstType;
     use logos::Span;
 
-    use super::publicity::AstPublicity;
-    use super::types::AstType;
-
     #[derive(Debug)]
-    pub struct FieldAstNode<'a> {
+    pub struct FieldAstNode<'a, PublicityEnum> {
         pub span: Span,
-        pub publicity: AstPublicity,
+        pub publicity: PublicityEnum,
         pub name: &'a str,
         pub field_type: AstType<'a>,
     }
 
-    pub type FieldList<'a> = Vec<FieldAstNode<'a>>;
+    pub type FieldList<'a, PublicityEnum> = Vec<FieldAstNode<'a, PublicityEnum>>;
 }
 
 pub mod types {

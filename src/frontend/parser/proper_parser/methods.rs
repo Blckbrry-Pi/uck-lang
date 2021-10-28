@@ -19,10 +19,11 @@ pub fn parse_methods_until_none_are_found<'a, PublicityEnum: ParsePublicity>(
 
         match parse_possibly_documented_method_or_constraint_block(lxr) {
             Ok(method) => methods.push(method),
-            Err(err) => {
+            Err(err) if !err.fatal => {
                 lxr.return_to_position(curr_spot);
                 break err;
             }
+            Err(err) => return Err(err),
         }
 
         if let Some(LexerToken::Comma) = lxr.peek() {

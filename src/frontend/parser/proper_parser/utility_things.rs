@@ -18,7 +18,7 @@ pub fn flush_comments(lxr: &mut LexerStruct) {
 pub fn expect_token<'a>(
     lxr: &mut LexerStruct<'a>,
     expected_token: LexerToken,
-    expected_arr: &'static [&'static str],
+    expected_arr: &'a [&'a str],
 ) -> Result<LexerToken<'a>, ParseError<'a>> {
     expect_token_with_optional_span(lxr, expected_token, expected_arr, None)
 }
@@ -35,7 +35,7 @@ pub fn expect_semicolon<'a>(lxr: &mut LexerStruct<'a>) -> Result<LexerToken<'a>,
 pub fn expect_token_with_optional_span<'a>(
     lxr: &mut LexerStruct<'a>,
     expected_token: LexerToken,
-    expected_arr: &'static [&'static str],
+    expected_arr: &'a [&'a str],
     optional_span: Option<logos::Span>,
 ) -> Result<LexerToken<'a>, ParseError<'a>> {
     let optional_span = if optional_span.is_some() {

@@ -57,7 +57,7 @@ impl<'a, TokenType: Clone + core::fmt::Debug + Logos<'a>> Iterator
 
 impl<'a, TokenType: Clone + core::fmt::Debug + Logos<'a>> CustomLexerStruct<'a, TokenType> {
     pub fn span(&self) -> Option<Span> {
-        if self.tokens.len() > self.next_token_index - 1 {
+        if self.next_token_index != 0 && self.tokens.len() > self.next_token_index - 1 {
             Some(self.tokens[self.next_token_index - 1].span.clone())
         } else {
             None
