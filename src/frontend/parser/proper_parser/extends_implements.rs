@@ -16,3 +16,13 @@ pub fn parse_implements<'a>(
 
     parse_type(lxr, None).map(Some)
 }
+
+pub fn parse_extends<'a>(lxr: &mut LexerStruct<'a>) -> Result<Option<AstType<'a>>, ParseError<'a>> {
+    let position = lxr.save_position();
+    if expect_token(lxr, LexerToken::Extends, &[]).is_err() {
+        lxr.return_to_position(position);
+        return Ok(None);
+    }
+
+    parse_type(lxr, None).map(Some)
+}

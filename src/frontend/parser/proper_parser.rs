@@ -1,5 +1,6 @@
 pub mod ast;
 
+pub mod classes;
 pub mod enums;
 pub mod expressions;
 pub mod extends_implements;

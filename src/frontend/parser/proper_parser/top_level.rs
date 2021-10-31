@@ -1,5 +1,6 @@
 use super::super::lexer::logos_lexer::LexerToken;
 
+use super::classes::parse_class;
 use super::enums::parse_enum_dec;
 use super::imports_exports::{parse_export_statement, parse_import_statement};
 use super::structs::parse_struct;
@@ -69,8 +70,7 @@ pub fn parse_top_level<'a>(lxr: &mut LexerStruct<'a>) -> TopLevelAstResult<'a> {
         // To deal with parsing class declarations. Wraps class declaration struct in the TopLevelAstNode enum.
         #[allow(unreachable_code, unused_variables, clippy::diverging_sub_expression)]
         Some(LexerToken::Class) => {
-            let class_declaration_struct: super::ast::classes::ClassDecAstNode =
-                unimplemented!("Parsing of class declarations is not yet supported");
+            let class_declaration_struct: super::ast::classes::ClassDecAstNode = parse_class(lxr)?;
             Ok(TopLevelAstNode::ClassDec(
                 class_declaration_struct.span.clone(),
                 class_declaration_struct,
