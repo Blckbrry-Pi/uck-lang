@@ -47,7 +47,6 @@ pub fn parse_top_level<'a>(lxr: &mut LexerStruct<'a>) -> TopLevelAstResult<'a> {
         }
 
         // To deal with parsing enum declarations. Wraps enum declaration struct in the TopLevelAstNode enum.
-        #[allow(unreachable_code, unused_variables, clippy::diverging_sub_expression)]
         Some(LexerToken::Enum) => {
             let enum_declaration_struct: super::ast::enums::EnumDecAstNode = parse_enum_dec(lxr)?;
             Ok(TopLevelAstNode::EnumDec(
@@ -57,7 +56,6 @@ pub fn parse_top_level<'a>(lxr: &mut LexerStruct<'a>) -> TopLevelAstResult<'a> {
         }
 
         // To deal with parsing struct declarations. Wraps struct declaration struct in the TopLevelAstNode enum.
-        #[allow(unreachable_code, unused_variables, clippy::diverging_sub_expression)]
         Some(LexerToken::Struct) => {
             let struct_declaration_struct: super::ast::structs::StructDecAstNode =
                 parse_struct(lxr)?;
@@ -68,7 +66,6 @@ pub fn parse_top_level<'a>(lxr: &mut LexerStruct<'a>) -> TopLevelAstResult<'a> {
         }
 
         // To deal with parsing class declarations. Wraps class declaration struct in the TopLevelAstNode enum.
-        #[allow(unreachable_code, unused_variables, clippy::diverging_sub_expression)]
         Some(LexerToken::Class) => {
             let class_declaration_struct: super::ast::classes::ClassDecAstNode = parse_class(lxr)?;
             Ok(TopLevelAstNode::ClassDec(
