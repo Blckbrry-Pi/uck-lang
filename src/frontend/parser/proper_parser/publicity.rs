@@ -29,6 +29,8 @@ impl ParsePublicity for AstClassItemPublicity {
     fn parse_publicity<'a>(lxr: &mut LexerStruct<'a>) -> Result<Self, ParseError<'a>> {
         match lxr.peek() {
             Some(LexerToken::Public) => Ok(AstClassItemPublicity::Public),
+            Some(LexerToken::ModuleProtected) => Ok(AstClassItemPublicity::ModuleProtected),
+            Some(LexerToken::Protected) => Ok(AstClassItemPublicity::Protected),
             Some(LexerToken::ModulePrivate) => Ok(AstClassItemPublicity::ModulePrivate),
             Some(LexerToken::Private) => Ok(AstClassItemPublicity::Private),
             invalid_token => Err(call_error(
