@@ -133,6 +133,22 @@ pub mod classes {
     }
 }
 
+pub mod interfaces {
+    use logos::Span;
+
+    use super::methods::MethodList;
+    use super::publicity::InterfaceMethodPublicity;
+    use super::types::AstType;
+
+    #[derive(Debug)]
+    pub struct InterfaceDecAstNode<'a> {
+        pub span: Span,
+        pub interface_type: AstType<'a>,
+        pub extends: Option<AstType<'a>>,
+        pub methods: MethodList<'a, InterfaceMethodPublicity>,
+    }
+}
+
 pub mod fields {
     use super::types::AstType;
     use logos::Span;
@@ -285,6 +301,11 @@ pub mod publicity {
         ModulePrivate,
         Protected,
         ModuleProtected,
+    }
+
+    #[derive(Debug)]
+    pub enum InterfaceMethodPublicity {
+        Public,
     }
 }
 

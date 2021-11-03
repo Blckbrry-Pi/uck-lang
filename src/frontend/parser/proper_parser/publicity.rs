@@ -1,5 +1,6 @@
 use super::super::lexer::logos_lexer::LexerToken;
-use super::ast::publicity::{AstClassItemPublicity, AstPublicity};
+
+use super::ast::publicity::{AstClassItemPublicity, AstPublicity, InterfaceMethodPublicity};
 use super::parse_error::ParseError;
 use super::utility_things::{call_error, LexerStruct};
 
@@ -40,5 +41,11 @@ impl ParsePublicity for AstClassItemPublicity {
                 false,
             )),
         }
+    }
+}
+
+impl ParsePublicity for InterfaceMethodPublicity {
+    fn parse_publicity<'a>(_lxr: &mut LexerStruct<'a>) -> Result<Self, ParseError<'a>> {
+        Ok(InterfaceMethodPublicity::Public)
     }
 }
