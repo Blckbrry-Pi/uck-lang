@@ -13,6 +13,8 @@ fn main() {
 
         println!("{:#?}", parse_str(&string));
     }
-
-    println!("Compiler for uck-lang coming soon!");
+    #[cfg(not(debug_assertions))]
+    {
+        println!("Compiler for uck-lang coming soon!");
+    }
 }
