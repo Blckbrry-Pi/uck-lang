@@ -1,0 +1,21 @@
+class MySuperClass1 {
+    pub thing: String,
+}
+
+class MySuperClass2 {
+    pub thing: Int,
+}
+
+class MyClass extends MySuperClass1, MySuperClass2 {
+    @Inherit(MySuperClass2)
+    pub thing,
+
+    @Inherit(MySuperClass.thing)
+    pub thing2,
+}
+
+fun main() {
+    let myObject: MySuperClass1 = MyClass();
+
+    let myString: String = myObject.thing;
+}
