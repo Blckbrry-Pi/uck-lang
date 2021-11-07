@@ -310,6 +310,26 @@ pub mod publicity {
 }
 
 pub mod expressions {
+    //! TODOS:
+    //! * CONTROL FLOW
+    //! * Loops (while, repeat, for)
+    //! * Break, continue, return
+    //! * If statements
+    //! * Match statements
+    //! * Match cases
+    //! 
+    //! OTHER TODOS:
+    //! * Operator usage
+    //! * Assignment
+    //! * Function call
+    //! * Member lookup
+    //! * Subscript
+    //! * Literal
+    //! * Type casting
+    //! * Variable declarations
+
+    
+    
     #[derive(Debug)]
     pub struct ExpressionBlockAstNode {}
 }
