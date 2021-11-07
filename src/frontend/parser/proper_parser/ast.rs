@@ -1,4 +1,19 @@
+//! This module holds all of the structs, enums, and type aliases that you will
+//! see used to represent a valid AST node.
+//!
+//! It hosts the modules: `top_level`, `imports_exports`, `enums`, `structs`,
+//! `classes`, `interfaces`, `fields`, `types`, `patterns`, `methods`,
+//! `publicity`, and `expressions`.
+//!
+//! The only things relevant to AST data structures that aren't in this file
+//! are:
+//! 1. certain parsing implementations for publicity structs
+//! 2. [`ParseError`](super::parse_error::ParseError)
+
 pub mod top_level {
+    //! This module contains the sum type that represents all the possible values
+    //! of a single top-level statement.
+
     use logos::Span;
 
     use super::classes::ClassDecAstNode;
@@ -7,6 +22,24 @@ pub mod top_level {
     use super::structs::StructDecAstNode;
     use super::types::TypeAliasAstNode;
 
+    /// This is the sum type ("enum") that represents all the possible top-level
+    /// statements.
+    ///
+    /// `Export(Span, Box<TopLevelAstNode<'a>>)` (a(n) (non-default) export
+    /// statement),
+    ///
+    /// `ExportDefault(Span, Box<TopLevelAstNode<'a>>)` (a default export
+    /// statement),
+    ///
+    /// `EnumDec(Span, EnumDecAstNode<'a>)` (an enum (sum type) declaration),
+    ///
+    /// `StructDec(Span, StructDecAstNode<'a>)` (a struct declaration),
+    ///
+    /// `ClassDec(Span, ClassDecAstNode<'a>)` (a class declaration), and
+    ///
+    /// `TypeAlias(Span, TypeAliasAstNode<'a>)` (a type alias)
+    ///
+    /// `TODO: Add Interface declarations to this.`
     #[derive(Debug)]
     pub enum TopLevelAstNode<'a> {
         ImportFrom(Span, ImportStatementAstNode<'a>),
@@ -21,12 +54,21 @@ pub mod top_level {
 
         TypeAlias(Span, TypeAliasAstNode<'a>),
 
+        /// (The span of this node is measured from the beginning of the comment to the
+        /// end of the subsequent statement.)
         CommentedNode(Span, &'a str, Box<TopLevelAstNode<'a>>),
 
+        /// This should (hopefully) never be used.
         Empty,
     }
 
     impl<'comment_contents> TopLevelAstNode<'comment_contents> {
+        /// Gets the span of the full AST node.
+        ///
+        /// This gets the span of the ENTIRE statement, from the signaling keyword to
+        /// the closing brackets/semicolon.
+        /// (For commented nodes, this is the span from the beginning of the comment to
+        /// the end of the contained node.)
         pub fn get_span(&self) -> Span {
             match self {
                 Self::ClassDec(span, _)
@@ -44,10 +86,33 @@ pub mod top_level {
 }
 
 pub mod imports_exports {
+    //! Although this module is called `imports_exports`, it does not house
+    //! anything in relation to exports.
+    //!
+    //! The only things that are in this module are the `ImportStatementAstNode`
+    //! struct, and the `AstModuleLocation` enum.
+    //!
+    //! `TODO: Make this just named "imports".`
+
     use logos::Span;
 
     use super::patterns::AstDestructuringPattern;
 
+    /// This struct represents a top-level import statement, supporting
+    /// destructuring and rust-like module paths.
+    ///
+    /// The fields are represented like this:
+    /// ```annotated-uck
+    ///                      ImportStatementAstNode.span
+    ///  _________________________________|_________________________________
+    /// │                                                                   │
+    /// import vec: { Vec, IntoIter: IntoIterCalledOnVecType } from std::vec;
+    ///        |_____________________________________________|      |______|
+    ///                              │                                 │
+    ///         ImportStatementAstNode.destructuring_pattern           │
+    ///                                                                │
+    ///                                             ImportStatementAstNode.module_location
+    /// ```
     #[derive(Debug)]
     pub struct ImportStatementAstNode<'a> {
         pub span: Span,
@@ -55,6 +120,39 @@ pub mod imports_exports {
         pub module_location: AstModuleLocation<'a>,
     }
 
+    /// This enum represents a path to a module.
+    ///
+    /// It parses into a tree from this:
+    /// ```
+    /// example::module::path::Type
+    /// ```
+    /// into this:
+    /// ```tree-representation
+    ///         MemberOf(_, ., .)
+    ///                    /    \
+    ///                   /      \
+    ///                  /     "Type"
+    ///                 /
+    ///   _____________/______________
+    ///  │    MemberOf(_, ., .)       │
+    ///  │               /    \       │
+    ///  │              /      \      │
+    ///  │             /     "path"   │
+    ///  │  __________/_____________  │
+    ///  │ │ MemberOf(_, ., .)      │ │
+    ///  │ │            /    \      │ │
+    ///  │ │           /      \     │ │
+    ///  │ │          /    "module" │ │
+    ///  │ │         /              │ │
+    ///  │ │  ______/___________    │ │
+    ///  │ │ │ Root(_, .)       │   │ │
+    ///  │ │ │          \       │   │ │
+    ///  │ │ │           \      │   │ │
+    ///  │ │ │        "example" │   │ │
+    ///  │ │ │__________________│   │ │
+    ///  │ │________________________│ │
+    ///  │____________________________│
+    /// ```
     #[derive(Debug)]
     pub enum AstModuleLocation<'a> {
         Root(Span, &'a str),
@@ -71,12 +169,42 @@ pub mod imports_exports {
 }
 
 pub mod enums {
+    //! This module only holds things that are strictly specific to enums. Anything
+    //! shared between the representation of enums, structs, classes, or other
+    //! syntactical concepts is housed in a different module.
+    //!
+    //! (This also holds as the pattern for most other things in the codebase. Code
+    //! reuse is important.)
+    //!
+    //! Anyway, the only things housed in this module are the structs `EnumDecAstNode` and
+    //! `EnumCaseAstNode`
+
     use logos::Span;
 
     use super::methods::MethodList;
     use super::publicity::AstPublicity;
     use super::types::AstType;
 
+    /// This struct represents an entire enum declaration, including the name,
+    /// generics, trait bounds, cases, and implementations.
+    /// 
+    /// Here is a practical example of what each struct field corresponds to:
+    /// ```text
+    ///                                enum_type                       implements
+    ///                    ________________|_______________              ___|____
+    ///                   |                                |            |        |
+    ///            │ enum EnumExample<T: Interface1 & Interface2> implements Clone {
+    /// cases ==*==│===> Case1(Type, Vec<Type3>),
+    ///         │  │
+    ///         *==│===> Case2(Type3),
+    ///         │  │
+    ///         *==│===> Case3(HashMap<Type1, Type3>),
+    ///            │
+    ///          / │     pub fn interface3Method(this, ) -> EnumExample {
+    /// methods │  │         // TODO: Some implementation here...
+    ///         |__│     }
+    ///            │ }
+    /// ```
     #[derive(Debug)]
     pub struct EnumDecAstNode<'a> {
         pub span: Span,
@@ -86,8 +214,36 @@ pub mod enums {
         pub methods: MethodList<'a, AstPublicity>,
     }
 
+    /// This type alias is pretty self-explainatory, it's a list of enum cases.
+    ///
+    /// ```text
+    ///     │ enum Enum1 {
+    ///     │
+    /// 0 ==│===> Case1(Type, Vec<Type3>),
+    ///     │  
+    /// 1 ==│===> Case2(Type3),
+    ///     │
+    /// 2 ==│===> Case3(HashMap<Type1, Type3>),
+    ///     │
+    ///     │ }
+    /// ```
     pub type CaseList<'a> = Vec<EnumCaseAstNode<'a>>;
 
+    /// This struct represents a single enum case, which is basically just a case
+    /// name and tuple of types that are contained by that case.
+    ///
+    /// Here is what each struct field refers to:
+    /// ```text
+    ///              EnumCaseAstNode::span
+    ///              __________|__________
+    ///             │                     │
+    ///             Case1(Type, Vec<Type3>),
+    ///             │___│ │______________│
+    ///               │            │
+    /// EnumCaseAstNode::case_name │
+    ///                            │
+    ///               EnumCaseAstNode::case_args
+    /// ```
     #[derive(Debug)]
     pub struct EnumCaseAstNode<'a> {
         pub span: Span,
@@ -331,5 +487,7 @@ pub mod expressions {
     
     
     #[derive(Debug)]
-    pub struct ExpressionBlockAstNode {}
+    pub struct ExpressionBlockAstNode {
+        
+    }
 }
