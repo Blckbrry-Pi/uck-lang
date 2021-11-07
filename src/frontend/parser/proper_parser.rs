@@ -17,8 +17,22 @@ pub mod parse_error;
 
 pub mod utility_things;
 
-use utility_things::{LexerStruct, TopLevelAstResult};
+use super::lexer::{custom_lexer_struct::CustomLexerStruct, logos_lexer::LexerToken};
+use {ast::top_level::TopLevelAstNode, parse_error::ParseError};
 
-pub fn get_ast_from_custom_lexer<'a>(lxr: &mut LexerStruct<'a>) -> TopLevelAstResult<'a> {
-    top_level::parse_top_level(lxr)
+
+pub type TopLevelAstNodeListResult<'a> = Result<Vec<TopLevelAstNode<'a>>, ParseError<'a>>;
+
+pub fn get_ast_from_custom_lexer<'a>(lxr: &mut CustomLexerStruct<'a, LexerToken<'a>>) -> TopLevelAstNodeListResult<'a> {
+    let mut statements = vec![];
+
+    loop {
+        match top_level::parse_top_level(lxr) {
+            Ok(node) => statements.push(node),
+            Err(err) if err.fatal => return Err(err),
+            _ => break,
+        }
+    }
+
+    Ok(statements)
 }
