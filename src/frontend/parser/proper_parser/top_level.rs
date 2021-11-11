@@ -1,3 +1,5 @@
+use crate::frontend::parser::proper_parser::interfaces::parse_interface;
+
 use super::super::lexer::logos_lexer::LexerToken;
 
 use super::classes::parse_class;
@@ -16,6 +18,7 @@ pub fn parse_top_level<'a>(lxr: &mut LexerStruct<'a>) -> TopLevelAstResult<'a> {
         "Enum Declaration",
         "Struct Declaration",
         "Class Declaration",
+        "Interface Declaration",
         "Type Alias",
     ];
 
@@ -71,6 +74,16 @@ pub fn parse_top_level<'a>(lxr: &mut LexerStruct<'a>) -> TopLevelAstResult<'a> {
             Ok(TopLevelAstNode::ClassDec(
                 class_declaration_struct.span.clone(),
                 class_declaration_struct,
+            ))
+        }
+
+        // To deal with parsing interface declarations. Wraps interface declaration struct in the TopLevelAstNode enum.
+        Some(LexerToken::Interface) => {
+            let interface_declaration_struct: super::ast::interfaces::InterfaceDecAstNode =
+                parse_interface(lxr)?;
+            Ok(TopLevelAstNode::InterfaceDec(
+                interface_declaration_struct.span.clone(),
+                interface_declaration_struct,
             ))
         }
 

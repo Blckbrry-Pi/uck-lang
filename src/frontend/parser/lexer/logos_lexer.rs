@@ -24,6 +24,8 @@ pub enum LexerToken<'a> {
     Struct,
     #[regex(r"class")]
     Class,
+    #[regex(r"interface")]
+    Interface,
     #[regex(r"type")]
     Type,
 

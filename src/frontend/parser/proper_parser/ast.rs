@@ -19,6 +19,7 @@ pub mod top_level {
     use super::classes::ClassDecAstNode;
     use super::enums::EnumDecAstNode;
     use super::imports_exports::ImportStatementAstNode;
+    use super::interfaces::InterfaceDecAstNode;
     use super::structs::StructDecAstNode;
     use super::types::TypeAliasAstNode;
 
@@ -36,6 +37,8 @@ pub mod top_level {
     /// `StructDec(Span, StructDecAstNode<'a>)` (a struct declaration),
     ///
     /// `ClassDec(Span, ClassDecAstNode<'a>)` (a class declaration), and
+    /// 
+    /// `InterfaceDec(Span, InterfaceDecAstNode<'a>)` (an interface declaration)
     ///
     /// `TypeAlias(Span, TypeAliasAstNode<'a>)` (a type alias)
     ///
@@ -51,6 +54,7 @@ pub mod top_level {
 
         StructDec(Span, StructDecAstNode<'a>),
         ClassDec(Span, ClassDecAstNode<'a>),
+        InterfaceDec(Span, InterfaceDecAstNode<'a>),
 
         TypeAlias(Span, TypeAliasAstNode<'a>),
 
@@ -78,6 +82,7 @@ pub mod top_level {
                 | Self::ExportDefault(span, _)
                 | Self::ImportFrom(span, _)
                 | Self::StructDec(span, _)
+                | Self::InterfaceDec(span, _)
                 | Self::TypeAlias(span, _) => span.clone(),
                 Self::Empty => unimplemented!("Can't get the span of an empty AST node."),
             }

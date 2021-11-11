@@ -6,6 +6,7 @@ pub mod expressions;
 pub mod extends_implements;
 pub mod fields;
 pub mod imports_exports;
+pub mod interfaces;
 pub mod methods;
 pub mod patterns;
 pub mod publicity;
